@@ -1,0 +1,17 @@
+machine:
+  java:
+    version: openjdk8
+dependencies:
+  pre:
+    - echo y | android update sdk --no-ui --all --filter "android-24,build-tools-24.0.2,sys-img-armeabi-v7a-android-23"
+test:
+  pre:
+    - emulator -avd circleci-android23 -no-audio -no-window:
+        background: true
+        parallel: true
+    - circle-android wait-for-boot
+  override:
+    - ./gradlew test connectedAndroidTest
+  post:
+    - cp -r build/test-results/debug $CIRCLE_TEST_REPORTS
+    - cp -r build/outputs/androidTest-results/* $CIRCLE_TEST_REPORTS
