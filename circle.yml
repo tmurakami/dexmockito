@@ -13,7 +13,6 @@ test:
   override:
     - ./gradlew testDebug connectedAndroidTest
   post:
-    - mkdir -p $CIRCLE_TEST_REPORTS/test/
-    - find . -type f -regex ".*/build/test-results/debug/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/test/ \;
-    - mkdir -p $CIRCLE_TEST_REPORTS/androidTest/
-    - find . -type f -regex ".*/build/outputs/androidTest-results/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/androidTest/ \;
+    - mkdir -p $CIRCLE_TEST_REPORTS/junit/
+    - find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
+    - find . -type f -regex ".*/build/outputs/androidTest-results/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
