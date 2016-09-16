@@ -14,7 +14,7 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.github.ben-manes.versions'
 
 group = 'com.github.tmurakami'
-version = '0.1.0'
+version = '0.2.0-SNAPSHOT'
 
 android {
     compileSdkVersion 24
@@ -35,7 +35,7 @@ repositories {
 dependencies {
     compile 'org.mockito:mockito-core:2.1.0-RC.1'
     compile 'com.github.tmurakami:dx:1.7'
-    compile('net.bytebuddy:byte-buddy-android:1.4.23') { exclude module: 'dx' }
+    compile('net.bytebuddy:byte-buddy-android:1.4.24') { exclude module: 'dx' }
     testCompile 'junit:junit:4.12'
 }
 
