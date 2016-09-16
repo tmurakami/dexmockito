@@ -14,6 +14,7 @@ import org.mockito.internal.creation.bytebuddy.ByteBuddyMockClassMaker;
 import org.mockito.mock.MockCreationSettings;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
@@ -21,6 +22,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
+
+import dalvik.system.DexFile;
 
 final class MockClassMakerFactory {
 
@@ -75,7 +78,27 @@ final class MockClassMakerFactory {
     private static ClassLoadingStrategy newClassLoadingStrategy(ClassLoader classLoader) {
         DexOptions options = new DexOptions();
         options.targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
-        return new ClassLoadingStrategyImpl(options, new CfOptions(), CacheDir.get(new File("/data/data"), classLoader));
+        return new DexClassLoadingStrategy(
+                options,
+                new CfOptions(),
+                CacheDir.get(new File("/data/data"), classLoader),
+                new BiFunction<File, File, BiFunction<String, ClassLoader, Class>>() {
+                    @Override
+                    public BiFunction<String, ClassLoader, Class> apply(File src, File dst) {
+                        final DexFile file;
+                        try {
+                            file = DexFile.loadDex(src.getAbsolutePath(), dst.getAbsolutePath(), 0);
+                        } catch (IOException e) {
+                            throw new IllegalStateException("Cannot load classes.dex from " + src);
+                        }
+                        return new BiFunction<String, ClassLoader, Class>() {
+                            @Override
+                            public Class apply(String name, ClassLoader classLoader) {
+                                return file.loadClass(name, classLoader);
+                            }
+                        };
+                    }
+                });
     }
 
 }
