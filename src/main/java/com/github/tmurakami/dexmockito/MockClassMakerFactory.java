@@ -44,7 +44,7 @@ final class MockClassMakerFactory {
                         return loader == null || loader == Object.class.getClassLoader() ? classLoader : loader;
                     }
                 },
-                new AndroidClassLoadingStrategy(DexCacheDir.get(new File("/data/data"), classLoader)));
+                new AndroidClassLoadingStrategy(CacheDir.get(new File("/data/data"), classLoader)));
     }
 
     private static Supplier<MockClassMaker> newMockClassCacheFactory(final MockClassMaker mockClassMaker) {
