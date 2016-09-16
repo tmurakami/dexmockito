@@ -45,7 +45,7 @@ public class ByteBuddyMockClassMakerTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        target = new ByteBuddyMockClassMaker(new ByteBuddy(), classLoaderResolver, ClassLoadingStrategy.Default.WRAPPER);
+        target = new ByteBuddyMockClassMaker(new ByteBuddy(), classLoaderResolver, ClassLoadingStrategy.Default.INJECTION);
     }
 
     @Parameterized.Parameters(name = "serializable={0}")
@@ -64,7 +64,7 @@ public class ByteBuddyMockClassMakerTest {
         assertTrue(C.class.isAssignableFrom(c));
         assertTrue(I.class.isAssignableFrom(c));
         assertTrue(MockAccess.class.isAssignableFrom(c));
-        assertEquals(classLoader, c.getClassLoader().getParent());
+        assertEquals(classLoader, c.getClassLoader());
         assertEquals(serializable, CrossClassLoaderSerializableMock.class.isAssignableFrom(c));
         Annotation[] annotations = c.getDeclaredAnnotations();
         assertEquals(1, annotations.length);
@@ -77,18 +77,16 @@ public class ByteBuddyMockClassMakerTest {
         assertEquals(A.class, methodAnnotations[0].annotationType());
     }
 
-    @SuppressWarnings("WeakerAccess")
     @Retention(RetentionPolicy.RUNTIME)
-    public @interface A {
+    @interface A {
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public interface I {
+    interface I {
     }
 
     @SuppressWarnings("WeakerAccess")
     @A
-    public static class C {
+    static class C {
         @SuppressWarnings("unused")
         @A
         public void doIt() {
