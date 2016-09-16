@@ -1,9 +1,13 @@
 package com.github.tmurakami.dexmockito;
 
+import com.android.dex.DexFormat;
+import com.android.dx.dex.DexOptions;
+import com.android.dx.dex.cf.CfOptions;
+
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.NamingStrategy;
-import net.bytebuddy.android.AndroidClassLoadingStrategy;
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.dynamic.scaffold.TypeValidation;
 
 import org.mockito.internal.creation.bytebuddy.ByteBuddyMockClassMaker;
@@ -44,7 +48,7 @@ final class MockClassMakerFactory {
                         return loader == null || loader == Object.class.getClassLoader() ? classLoader : loader;
                     }
                 },
-                new AndroidClassLoadingStrategy(CacheDir.get(new File("/data/data"), classLoader)));
+                newClassLoadingStrategy(classLoader));
     }
 
     private static Supplier<MockClassMaker> newMockClassCacheFactory(final MockClassMaker mockClassMaker) {
@@ -66,6 +70,12 @@ final class MockClassMakerFactory {
                         });
             }
         };
+    }
+
+    private static ClassLoadingStrategy newClassLoadingStrategy(ClassLoader classLoader) {
+        DexOptions options = new DexOptions();
+        options.targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
+        return new ClassLoadingStrategyImpl(options, new CfOptions(), CacheDir.get(new File("/data/data"), classLoader));
     }
 
 }
