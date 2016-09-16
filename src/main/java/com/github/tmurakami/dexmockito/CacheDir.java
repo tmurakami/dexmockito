@@ -5,9 +5,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
 
-final class DexCacheDir {
+final class CacheDir {
 
-    private DexCacheDir() {
+    private CacheDir() {
         throw new AssertionError("Do not instantiate");
     }
 
