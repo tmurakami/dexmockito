@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.BDDMockito.given;
 
 @RunWith(Parameterized.class)
-public class DexCacheDirTest {
+public class CacheDirTest {
 
     @Rule
     public final TemporaryFolder folder = new TemporaryFolder();
@@ -32,7 +32,7 @@ public class DexCacheDirTest {
 
     private final String apkPath;
 
-    public DexCacheDirTest(String apkPath) {
+    public CacheDirTest(String apkPath) {
         this.apkPath = apkPath;
     }
 
@@ -57,7 +57,7 @@ public class DexCacheDirTest {
         given(resources.nextElement()).willReturn(url).willThrow(new NoSuchElementException());
         folder.newFolder("a.b.c");
         File root = folder.getRoot();
-        assertEquals(new File(root, "a.b.c/cache/dexmockito"), DexCacheDir.get(root, classLoader));
+        assertEquals(new File(root, "a.b.c/cache/dexmockito"), CacheDir.get(root, classLoader));
     }
 
 }
