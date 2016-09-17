@@ -14,13 +14,13 @@ import java.util.concurrent.FutureTask;
 
 import dalvik.system.DexFile;
 
-enum MockClassMakerFactory implements MockClassMaker.Factory {
+enum DefaultMockClassMakerFactory implements MockClassMaker.Factory {
 
     INSTANCE;
 
     @Override
     public MockClassMaker get() {
-        final ClassLoader classLoader = MockClassMakerFactory.class.getClassLoader();
+        final ClassLoader classLoader = DefaultMockClassMakerFactory.class.getClassLoader();
         File cacheDir = CacheDir.get(new File("/data/data"), classLoader);
         final MockClassMaker mockClassMaker = new ByteBuddyMockClassMaker(
                 new ByteBuddyMockClassMaker.ClassLoaderResolver() {
