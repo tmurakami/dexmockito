@@ -58,34 +58,30 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
         }
     }
 
-    private Map<TypeDescription, Class<?>> load(DexFile file,
+    private Map<TypeDescription, Class<?>> load(DexFile dexFile,
                                                 ClassLoader classLoader,
                                                 Map<TypeDescription, byte[]> types)
             throws IOException, ClassNotFoundException {
         String name = randomString.nextString();
-        File src = new File(cacheDir, name + ".jar");
-        String out = cacheDir.getAbsolutePath() + '/' + name + ".dex";
-        dalvik.system.DexFile dexFile = null;
+        File jar = new File(cacheDir, name + ".jar");
+        dalvik.system.DexFile file = null;
         try {
-            if (!src.createNewFile()) {
-                throw new RuntimeException("Cannot create " + src);
-            }
-            writeDexToJar(file, src);
-            dexFile = dexFileLoader.loadDex(src.getAbsolutePath(), out, 0);
+            writeDexToJar(dexFile, jar);
+            file = dexFileLoader.loadDex(jar, new File(cacheDir, name + ".dex"), 0);
             Map<TypeDescription, Class<?>> classMap = new HashMap<>();
-            for (TypeDescription d : types.keySet()) {
-                classMap.put(d, loadClass(dexFile, d, classLoader));
+            for (TypeDescription td : types.keySet()) {
+                classMap.put(td, loadClass(file, td, classLoader));
             }
             return classMap;
         } finally {
-            if (dexFile != null) {
+            if (file != null) {
                 try {
-                    dexFile.close();
+                    file.close();
                 } catch (IOException ignored) {
                 }
             }
-            if (src.exists() && !src.delete()) {
-                Logger.getLogger(LOGGER_NAME).warning("Cannot delete " + src);
+            if (jar.exists() && !jar.delete()) {
+                Logger.getLogger(LOGGER_NAME).warning("Cannot delete " + jar);
             }
         }
     }
@@ -113,7 +109,7 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
     }
 
     interface DexFileLoader {
-        dalvik.system.DexFile loadDex(String sourcePathName, String outputPathName, int flags) throws IOException;
+        dalvik.system.DexFile loadDex(File sourceFile, File outputFile, int flags) throws IOException;
     }
 
 }

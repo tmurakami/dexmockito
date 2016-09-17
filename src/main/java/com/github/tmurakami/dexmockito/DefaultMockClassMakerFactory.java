@@ -34,8 +34,8 @@ enum DefaultMockClassMakerFactory implements MockClassMaker.Factory {
                         cacheDir,
                         new DexClassLoadingStrategy.DexFileLoader() {
                             @Override
-                            public DexFile loadDex(String sourcePathName, String outputPathName, int flags) throws IOException {
-                                return DexFile.loadDex(sourcePathName, outputPathName, flags);
+                            public DexFile loadDex(File sourceFile, File outputFile, int flags) throws IOException {
+                                return DexFile.loadDex(sourceFile.getAbsolutePath(), outputFile.getAbsolutePath(), flags);
                             }
                         }));
         return new MockClassMakerCache(
