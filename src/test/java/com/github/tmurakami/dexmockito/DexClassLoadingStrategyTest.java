@@ -28,6 +28,7 @@ import static org.mockito.BDDMockito.anyString;
 import static org.mockito.BDDMockito.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.mock;
+import static org.mockito.BDDMockito.then;
 
 public class DexClassLoadingStrategyTest {
 
@@ -38,29 +39,29 @@ public class DexClassLoadingStrategyTest {
     TypeDescription typeDescription;
 
     @Mock
-    BiFunction<File, File, BiFunction<String, ClassLoader, Class>> dexClassLoaderFactory;
+    BiFunction<File, File, DexLoader> dexLoaderFactory;
 
     @Mock
-    BiFunction<String, ClassLoader, Class> dexClassLoader;
+    DexLoader dexLoader;
 
     private DexClassLoadingStrategy target;
 
     @Before
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
-        target = new DexClassLoadingStrategy(new DexOptions(), new CfOptions(), folder.newFolder(), dexClassLoaderFactory);
+        target = new DexClassLoadingStrategy(new DexOptions(), new CfOptions(), folder.newFolder(), dexLoaderFactory);
     }
 
     @Test
     public void testLoad() throws IOException {
         ClassLoader classLoader = getClass().getClassLoader();
-        given(dexClassLoader.apply(anyString(), eq(classLoader))).willAnswer(new Answer<Class>() {
+        given(dexLoader.apply(anyString(), eq(classLoader))).willAnswer(new Answer<Class>() {
             @Override
             public Class answer(InvocationOnMock invocation) throws Throwable {
                 return Class.forName(invocation.<String>getArgument(0), false, invocation.<ClassLoader>getArgument(1));
             }
         });
-        given(dexClassLoaderFactory.apply(any(File.class), any(File.class))).willReturn(dexClassLoader);
+        given(dexLoaderFactory.apply(any(File.class), any(File.class))).willReturn(dexLoader);
         Map<TypeDescription, byte[]> types = new HashMap<>();
         Map<TypeDescription, Class> classes = new HashMap<>();
         for (Class<?> c : new Class[]{A.class, B.class, C.class}) {
@@ -75,6 +76,7 @@ public class DexClassLoadingStrategyTest {
             classes.put(td, c);
         }
         assertEquals(classes, target.load(classLoader, types));
+        then(dexLoader).should().close();
     }
 
     private static class A {

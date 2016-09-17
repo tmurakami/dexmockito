@@ -30,86 +30,72 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
     private final DexOptions dexOptions;
     private final CfOptions cfOptions;
     private final File cacheDir;
-    private final BiFunction<File, File, BiFunction<String, ClassLoader, Class>> dexClassLoaderFactory;
+    private final BiFunction<File, File, DexLoader> dexLoaderFactory;
     private final RandomString randomString = new RandomString();
 
     DexClassLoadingStrategy(DexOptions dexOptions,
                             CfOptions cfOptions,
                             File cacheDir,
-                            BiFunction<File, File, BiFunction<String, ClassLoader, Class>> dexClassLoaderFactory) {
+                            BiFunction<File, File, DexLoader> dexLoaderFactory) {
         this.dexOptions = dexOptions;
         this.cfOptions = cfOptions;
         this.cacheDir = cacheDir;
-        this.dexClassLoaderFactory = dexClassLoaderFactory;
+        this.dexLoaderFactory = dexLoaderFactory;
     }
 
     @Override
     public Map<TypeDescription, Class<?>> load(ClassLoader classLoader,
                                                Map<TypeDescription, byte[]> types) {
-        DexFile dex = newDexFile(types);
-        String name = randomString.nextString();
-        File src = new File(cacheDir, name + ".jar");
-        File dst = new File(cacheDir, name + ".dex");
-        try {
-            createNewFile(src);
-            writeDexToJar(dex, src);
-            return loadClasses(classLoader, types, dexClassLoaderFactory.apply(src, dst));
-        } finally {
-            if (src.exists() && !src.delete()) {
-                Logger.getLogger(TAG).warning("Cannot delete " + src);
-            }
-        }
-    }
-
-    private DexFile newDexFile(Map<TypeDescription, byte[]> types) {
-        DexFile file = new DexFile(dexOptions);
+        DexFile dexFile = new DexFile(dexOptions);
         for (Map.Entry<TypeDescription, byte[]> entry : types.entrySet()) {
             String name = entry.getKey().getName().replace('.', '/') + ".class";
-            DirectClassFile f = new DirectClassFile(entry.getValue(), name, false);
+            byte[] value = entry.getValue();
+            DirectClassFile f = new DirectClassFile(value, name, false);
             f.setAttributeFactory(StdAttributeFactory.THE_ONE);
-            file.add(CfTranslator.translate(f, entry.getValue(), cfOptions, dexOptions, file));
+            dexFile.add(CfTranslator.translate(f, value, cfOptions, dexOptions, dexFile));
         }
-        return file;
+        String name = randomString.nextString();
+        File jar = new File(cacheDir, name + ".jar");
+        DexLoader dexLoader = null;
+        try {
+            createNewFile(jar);
+            writeDex(dexFile, jar);
+            dexLoader = dexLoaderFactory.apply(jar, new File(cacheDir, name + ".dex"));
+            Map<TypeDescription, Class<?>> classMap = new HashMap<>();
+            for (TypeDescription td : types.keySet()) {
+                classMap.put(td, dexLoader.apply(td.getName(), classLoader));
+            }
+            return classMap;
+        } finally {
+            IOUtil.closeQuietly(dexLoader);
+            if (jar.exists() && !jar.delete()) {
+                Logger.getLogger(TAG).warning("Cannot delete " + jar);
+            }
+        }
     }
 
     private static void createNewFile(File file) {
-        IOException cause = null;
         try {
-            if (file.createNewFile()) {
-                return;
+            if (!file.createNewFile()) {
+                throw new RuntimeException("Cannot create " + file);
             }
         } catch (IOException e) {
-            cause = e;
+            throw new RuntimeException(e);
         }
-        throw new IllegalStateException("Cannot create " + file, cause);
     }
 
-    private static void writeDexToJar(DexFile dex, File jar) {
+    private static void writeDex(com.android.dx.dex.file.DexFile dexFile, File file) {
         JarOutputStream out = null;
         try {
-            out = new JarOutputStream(new BufferedOutputStream(new FileOutputStream(jar)));
+            out = new JarOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
             out.putNextEntry(new JarEntry("classes.dex"));
-            dex.writeTo(out, null, false);
+            dexFile.writeTo(out, null, false);
             out.closeEntry();
         } catch (IOException e) {
-            throw new IllegalStateException("Cannot write classes.dex to " + jar, e);
+            throw new RuntimeException(e);
         } finally {
             IOUtil.closeQuietly(out);
         }
-    }
-
-    private static Map<TypeDescription, Class<?>> loadClasses(ClassLoader classLoader,
-                                                              Map<TypeDescription, byte[]> types,
-                                                              BiFunction<String, ClassLoader, Class> dexClassLoader) {
-        Map<TypeDescription, Class<?>> map = new HashMap<>();
-        for (TypeDescription td : types.keySet()) {
-            Class<?> c = dexClassLoader.apply(td.getName(), classLoader);
-            if (c == null) {
-                throw new IllegalStateException("Cannot load class " + td.getName());
-            }
-            map.put(td, c);
-        }
-        return map;
     }
 
 }
