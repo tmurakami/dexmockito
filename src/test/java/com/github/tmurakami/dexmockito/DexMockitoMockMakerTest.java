@@ -15,7 +15,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 @RunWith(MockitoJUnitRunner.class)
-public class DexmockitoMockMakerTest {
+public class DexMockitoMockMakerTest {
 
     @Mock
     MockMaker delegate;
@@ -29,7 +29,7 @@ public class DexmockitoMockMakerTest {
     MockMaker.TypeMockability typeMockability;
 
     @InjectMocks
-    DexmockitoMockMaker target;
+    DexMockitoMockMaker target;
 
     @Test
     public void testCreateMock() {

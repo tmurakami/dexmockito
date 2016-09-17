@@ -8,16 +8,16 @@ import org.mockito.mock.MockCreationSettings;
 import org.mockito.plugins.MockMaker;
 import org.objenesis.ObjenesisStd;
 
-public final class DexmockitoMockMaker implements MockMaker {
+public final class DexMockitoMockMaker implements MockMaker {
 
     private final MockMaker delegate;
     private final MockClassMaker mockClassMaker;
 
-    public DexmockitoMockMaker() {
+    public DexMockitoMockMaker() {
         this(new ObjenesisStd(false).newInstance(ByteBuddyMockMaker.class), MockClassMakerFactory.INSTANCE.get());
     }
 
-    private DexmockitoMockMaker(MockMaker delegate, MockClassMaker mockClassMaker) {
+    private DexMockitoMockMaker(MockMaker delegate, MockClassMaker mockClassMaker) {
         this.delegate = delegate;
         this.mockClassMaker = mockClassMaker;
     }
