@@ -19,7 +19,7 @@ version = '0.2.0-SNAPSHOT'
 android {
     compileSdkVersion 24
     buildToolsVersion '24.0.2'
-    defaultConfig.minSdkVersion 3
+    defaultConfig.minSdkVersion 5
     lintOptions.disable 'InvalidPackage'
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
