@@ -32,7 +32,7 @@ final class CacheDir {
                 }
             }
         }
-        throw new RuntimeException("Cannot access Dexmockito cache directory");
+        throw new RuntimeException("Cannot access DexMockito cache directory");
     }
 
 }

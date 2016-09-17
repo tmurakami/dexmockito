@@ -35,7 +35,7 @@ final class MockClassMakerFactory {
         return new MockClassMakerCache(
                 new ConcurrentHashMap<Reference, MockClassMaker>(),
                 new ReferenceQueue<>(),
-                newMockClassCacheFactory(newByteBuddyMockClassMaker(MockClassMakerFactory.class.getClassLoader())));
+                new MockClassCacheFactory(newByteBuddyMockClassMaker(MockClassMakerFactory.class.getClassLoader())));
     }
 
     private static MockClassMaker newByteBuddyMockClassMaker(final ClassLoader classLoader) {
@@ -54,51 +54,71 @@ final class MockClassMakerFactory {
                 newClassLoadingStrategy(classLoader));
     }
 
-    private static Supplier<MockClassMaker> newMockClassCacheFactory(final MockClassMaker mockClassMaker) {
-        return new Supplier<MockClassMaker>() {
-            @Override
-            public MockClassMaker get() {
-                return new MockClassCache(
-                        new ConcurrentHashMap<Integer, Future<Reference<Class>>>(),
-                        new Function<MockCreationSettings<?>, FutureTask<Reference<Class>>>() {
-                            @Override
-                            public FutureTask<Reference<Class>> apply(final MockCreationSettings<?> settings) {
-                                return new FutureTask<>(new Callable<Reference<Class>>() {
-                                    @Override
-                                    public Reference<Class> call() throws Exception {
-                                        return new WeakReference<>(mockClassMaker.apply(settings));
-                                    }
-                                });
-                            }
-                        });
-            }
-        };
+    private static ClassLoadingStrategy newClassLoadingStrategy(ClassLoader classLoader) {
+        DexOptions dexOptions = new DexOptions();
+        dexOptions.targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
+        File cacheDir = CacheDir.get(new File("/data/data"), classLoader);
+        return new DexClassLoadingStrategy(dexOptions, new CfOptions(), cacheDir, new DexLoaderFactory());
     }
 
-    private static ClassLoadingStrategy newClassLoadingStrategy(ClassLoader classLoader) {
-        DexOptions options = new DexOptions();
-        options.targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
-        return new DexClassLoadingStrategy(
-                options,
-                new CfOptions(),
-                CacheDir.get(new File("/data/data"), classLoader),
-                new BiFunction<File, File, BiFunction<String, ClassLoader, Class>>() {
-                    @Override
-                    public BiFunction<String, ClassLoader, Class> apply(File src, File dst) {
-                        final DexFile file;
-                        try {
-                            file = DexFile.loadDex(src.getAbsolutePath(), dst.getAbsolutePath(), 0);
-                        } catch (IOException e) {
-                            throw new IllegalStateException("Cannot load classes.dex from " + src);
+    private static class MockClassCacheFactory implements Supplier<MockClassMaker> {
+
+        private final MockClassMaker mockClassMaker;
+
+        private MockClassCacheFactory(MockClassMaker mockClassMaker) {
+            this.mockClassMaker = mockClassMaker;
+        }
+
+        @Override
+        public MockClassMaker get() {
+            final MockClassMaker maker = mockClassMaker;
+            return new MockClassCache(
+                    new ConcurrentHashMap<Integer, Future<Reference<Class>>>(),
+                    new Function<MockCreationSettings<?>, FutureTask<Reference<Class>>>() {
+                        @Override
+                        public FutureTask<Reference<Class>> apply(final MockCreationSettings<?> settings) {
+                            return new FutureTask<>(new Callable<Reference<Class>>() {
+                                @Override
+                                public Reference<Class> call() throws Exception {
+                                    return new WeakReference<>(maker.apply(settings));
+                                }
+                            });
                         }
-                        return new BiFunction<String, ClassLoader, Class>() {
-                            @Override
-                            public Class apply(String name, ClassLoader classLoader) {
-                                return file.loadClass(name, classLoader);
-                            }
-                        };
+                    });
+        }
+
+    }
+
+    private static class DexLoaderFactory implements BiFunction<File, File, DexLoader> {
+
+        @Override
+        public DexLoader apply(File src, File out) {
+            final DexFile file = loadDex(src, out);
+            return new DexLoader() {
+                @Override
+                public void close() throws IOException {
+                    file.close();
+                }
+
+                @Override
+                public Class apply(String name, ClassLoader classLoader) {
+                    Class<?> c = file.loadClass(name, classLoader);
+                    if (c == null) {
+                        throw new RuntimeException("Cannot find class " + name);
                     }
-                });
+                    return c;
+                }
+            };
+        }
+
+        private DexFile loadDex(File src, File out) {
+            try {
+                return DexFile.loadDex(src.getAbsolutePath(), out.getAbsolutePath(), 0);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
     }
 
 }
