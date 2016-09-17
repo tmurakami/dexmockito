@@ -1,9 +1,9 @@
 package com.github.tmurakami.dexmockito;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.mock.MockCreationSettings;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -14,15 +14,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
@@ -31,7 +28,7 @@ import static org.mockito.Mockito.times;
 public class MockClassCacheTest {
 
     @Mock
-    Function<MockCreationSettings<?>, FutureTask<Reference<Class>>> taskFactory;
+    MockClassCache.TaskFactory taskFactory;
     @Mock
     FutureTask<Reference<Class>> task;
     @Mock
@@ -39,24 +36,18 @@ public class MockClassCacheTest {
     @Mock
     MockCreationSettings<C> settings;
 
-    private MockClassCache target;
-
-    private final ConcurrentMap<Integer, Future<Reference<Class>>> cache = new ConcurrentHashMap<>();
-
-    @Before
-    public void setUp() {
-        target = new MockClassCache(cache, taskFactory);
-    }
+    @InjectMocks
+    MockClassCache target;
 
     @Test
-    public void testGenerate() throws Throwable {
+    public void testCreateMockClass() throws Throwable {
         Class[] classes = {null, C.class};
         BDDMockito.BDDMyOngoingStubbing<Class> stubbing = given(ref.get());
         for (Class<?> c : classes) {
             stubbing = stubbing.willReturn(c);
         }
         given(task.get()).willReturn(ref);
-        given(taskFactory.apply(any(MockCreationSettings.class))).willReturn(task);
+        given(taskFactory.apply(settings)).willReturn(task);
         given(settings.getTypeToMock()).willReturn(C.class);
         int count = 10;
         List<Callable<Class<?>>> tasks = new ArrayList<>(count);

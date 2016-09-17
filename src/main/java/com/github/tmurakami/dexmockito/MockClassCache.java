@@ -3,6 +3,7 @@ package com.github.tmurakami.dexmockito;
 import org.mockito.mock.MockCreationSettings;
 
 import java.lang.ref.Reference;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -10,12 +11,10 @@ import java.util.concurrent.FutureTask;
 
 final class MockClassCache implements MockClassMaker {
 
-    private final ConcurrentMap<Integer, Future<Reference<Class>>> cache;
-    private final Function<MockCreationSettings<?>, FutureTask<Reference<Class>>> taskFactory;
+    private final TaskFactory taskFactory;
+    private final ConcurrentMap<Integer, Future<Reference<Class>>> cache = new ConcurrentHashMap<>();
 
-    MockClassCache(ConcurrentMap<Integer, Future<Reference<Class>>> cache,
-                   Function<MockCreationSettings<?>, FutureTask<Reference<Class>>> taskFactory) {
-        this.cache = cache;
+    MockClassCache(TaskFactory taskFactory) {
         this.taskFactory = taskFactory;
     }
 
@@ -58,13 +57,13 @@ final class MockClassCache implements MockClassMaker {
                 } catch (InterruptedException e) {
                     interrupted = true;
                 } catch (ExecutionException e) {
-                    Throwable t = e.getCause();
-                    if (t instanceof Error) {
-                        throw (Error) t;
-                    } else if (t instanceof RuntimeException) {
-                        throw (RuntimeException) t;
+                    Throwable cause = e.getCause();
+                    if (cause instanceof Error) {
+                        throw (Error) cause;
+                    } else if (cause instanceof RuntimeException) {
+                        throw (RuntimeException) cause;
                     } else {
-                        throw new RuntimeException(t);
+                        throw new RuntimeException(cause);
                     }
                 }
             }
@@ -73,6 +72,9 @@ final class MockClassCache implements MockClassMaker {
                 Thread.currentThread().interrupt();
             }
         }
+    }
+
+    interface TaskFactory extends Function<MockCreationSettings<?>, FutureTask<Reference<Class>>> {
     }
 
 }

@@ -13,11 +13,11 @@ final class MockClassMakerCache implements MockClassMaker {
 
     private final ConcurrentMap<Reference, MockClassMaker> cache;
     private final ReferenceQueue<Object> queue;
-    private final Supplier<MockClassMaker> mockClassMakerFactory;
+    private final Factory mockClassMakerFactory;
 
     MockClassMakerCache(ConcurrentMap<Reference, MockClassMaker> cache,
                         ReferenceQueue<Object> queue,
-                        Supplier<MockClassMaker> mockClassMakerFactory) {
+                        Factory mockClassMakerFactory) {
         this.cache = cache;
         this.queue = queue;
         this.mockClassMakerFactory = mockClassMakerFactory;

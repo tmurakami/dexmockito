@@ -11,7 +11,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -35,7 +34,7 @@ public class DexmockitoMockMakerTest {
     @Test
     public void testCreateMock() {
         Class<C> c = C.class;
-        given(mockClassMaker.apply(any(MockCreationSettings.class))).willReturn(c);
+        given(mockClassMaker.apply(settings)).willReturn(c);
         given(settings.getTypeToMock()).willReturn(c);
         Object mock = target.createMock(settings, handler);
         assertTrue(c.isInstance(mock));
@@ -44,8 +43,9 @@ public class DexmockitoMockMakerTest {
 
     @Test
     public void testGetHandler() {
-        given(delegate.getHandler(any())).willReturn(handler);
-        assertEquals(handler, target.getHandler(new Object()));
+        Object o = new Object();
+        given(delegate.getHandler(o)).willReturn(handler);
+        assertEquals(handler, target.getHandler(o));
     }
 
     @Test

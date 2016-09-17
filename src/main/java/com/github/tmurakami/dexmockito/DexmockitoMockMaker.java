@@ -14,7 +14,7 @@ public final class DexmockitoMockMaker implements MockMaker {
     private final MockClassMaker mockClassMaker;
 
     public DexmockitoMockMaker() {
-        this(new ObjenesisStd(false).newInstance(ByteBuddyMockMaker.class), MockClassMakerFactory.newMockClassMaker());
+        this(new ObjenesisStd(false).newInstance(ByteBuddyMockMaker.class), MockClassMakerFactory.INSTANCE.get());
     }
 
     private DexmockitoMockMaker(MockMaker delegate, MockClassMaker mockClassMaker) {

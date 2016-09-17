@@ -22,14 +22,14 @@ import java.util.concurrent.ConcurrentMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.BDDMockito.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MockClassMakerCacheTest {
 
     @Mock
-    Supplier<MockClassMaker> mockClassMakerFactory;
+    MockClassMaker.Factory mockClassMakerFactory;
     @Mock
     MockClassMaker mockClassMaker;
     @Mock
@@ -46,7 +46,7 @@ public class MockClassMakerCacheTest {
     }
 
     @Test
-    public void testGenerate() throws IOException {
+    public void testCreateMockClass() throws IOException {
         Map<Class<?>, ?> map = new WeakHashMap<>();
         for (int i = 0; i < 3; i++) {
             Class<C> c = redefineClass(C.class);

@@ -4,8 +4,11 @@ import com.github.tmurakami.dexmockito.Function;
 import com.github.tmurakami.dexmockito.MockClassMaker;
 
 import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.ClassFileVersion;
+import net.bytebuddy.NamingStrategy.SuffixingRandom;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
+import net.bytebuddy.dynamic.scaffold.TypeValidation;
 
 import org.mockito.internal.creation.bytebuddy.ByteBuddyCrossClassLoaderSerializationSupport.CrossClassLoaderSerializableMock;
 import org.mockito.internal.creation.bytebuddy.MockMethodInterceptor.DispatcherDefaultingToRealMethod;
@@ -18,6 +21,7 @@ import org.mockito.mock.MockCreationSettings;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 
+import static net.bytebuddy.NamingStrategy.SuffixingRandom.BaseNameResolver.ForUnnamedType;
 import static net.bytebuddy.description.modifier.SynchronizationState.PLAIN;
 import static net.bytebuddy.description.modifier.Visibility.PRIVATE;
 import static net.bytebuddy.dynamic.Transformer.ForMethod.withModifiers;
@@ -32,14 +36,14 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 public final class ByteBuddyMockClassMaker implements MockClassMaker {
 
-    private final ByteBuddy byteBuddy;
-    private final Function<MockCreationSettings<?>, ClassLoader> classLoaderResolver;
+    private final ClassLoaderResolver classLoaderResolver;
     private final ClassLoadingStrategy classLoadingStrategy;
+    private final ByteBuddy byteBuddy = new ByteBuddy()
+            .with(ClassFileVersion.JAVA_V6)
+            .with(TypeValidation.DISABLED)
+            .with(new SuffixingRandom("MockitoMock", ForUnnamedType.INSTANCE, "codegen"));
 
-    public ByteBuddyMockClassMaker(ByteBuddy byteBuddy,
-                                   Function<MockCreationSettings<?>, ClassLoader> classLoaderResolver,
-                                   ClassLoadingStrategy classLoadingStrategy) {
-        this.byteBuddy = byteBuddy;
+    public ByteBuddyMockClassMaker(ClassLoaderResolver classLoaderResolver, ClassLoadingStrategy classLoadingStrategy) {
         this.classLoaderResolver = classLoaderResolver;
         this.classLoadingStrategy = classLoadingStrategy;
     }
@@ -61,6 +65,9 @@ public final class ByteBuddyMockClassMaker implements MockClassMaker {
             builder = builder.implement(CrossClassLoaderSerializableMock.class).intercept(to(ForWriteReplace.class));
         }
         return builder.make().load(classLoaderResolver.apply(settings), classLoadingStrategy).getLoaded();
+    }
+
+    public interface ClassLoaderResolver extends Function<MockCreationSettings<?>, ClassLoader> {
     }
 
 }
