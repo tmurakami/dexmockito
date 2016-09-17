@@ -3,8 +3,8 @@ package com.github.tmurakami.dexmockito;
 import junit.framework.TestCase;
 
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.mock;
-import static org.mockito.BDDMockito.spy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
 public class MockTest extends TestCase {
 

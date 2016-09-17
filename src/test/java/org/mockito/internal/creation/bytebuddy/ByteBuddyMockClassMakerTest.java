@@ -1,8 +1,5 @@
 package org.mockito.internal.creation.bytebuddy;
 
-import com.github.tmurakami.dexmockito.Function;
-
-import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 
 import org.junit.Before;
@@ -24,7 +21,6 @@ import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.given;
 
 @RunWith(Parameterized.class)
@@ -33,7 +29,7 @@ public class ByteBuddyMockClassMakerTest {
     @Mock
     MockCreationSettings<C> settings;
     @Mock
-    Function<MockCreationSettings<?>, ClassLoader> classLoaderResolver;
+    ByteBuddyMockClassMaker.ClassLoaderResolver classLoaderResolver;
 
     private ByteBuddyMockClassMaker target;
     private final boolean serializable;
@@ -45,7 +41,7 @@ public class ByteBuddyMockClassMakerTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        target = new ByteBuddyMockClassMaker(new ByteBuddy(), classLoaderResolver, ClassLoadingStrategy.Default.INJECTION);
+        target = new ByteBuddyMockClassMaker(classLoaderResolver, ClassLoadingStrategy.Default.INJECTION);
     }
 
     @Parameterized.Parameters(name = "serializable={0}")
@@ -54,12 +50,12 @@ public class ByteBuddyMockClassMakerTest {
     }
 
     @Test
-    public void testGenerate() throws NoSuchFieldException, NoSuchMethodException, IllegalAccessException {
+    public void testCreateMockClass() throws Exception {
+        ClassLoader classLoader = getClass().getClassLoader();
+        given(classLoaderResolver.apply(settings)).willReturn(classLoader);
         given(settings.getTypeToMock()).willReturn(C.class);
         given(settings.getExtraInterfaces()).willReturn(Collections.<Class<?>>singleton(I.class));
         given(settings.isSerializable()).willReturn(serializable);
-        ClassLoader classLoader = getClass().getClassLoader();
-        given(classLoaderResolver.apply(any(MockCreationSettings.class))).willReturn(classLoader);
         Class<?> c = target.apply(settings);
         assertTrue(C.class.isAssignableFrom(c));
         assertTrue(I.class.isAssignableFrom(c));
