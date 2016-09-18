@@ -8,11 +8,12 @@ dependencies:
   pre:
     - echo y | android update sdk --no-ui --all --filter "android-24,build-tools-24.0.2,sys-img-armeabi-v7a-android-23"
 test:
-  override:
-    - ./gradlew testDebug assembleDebugAndroidTest
+  pre:
     - emulator -avd circleci-android23 -no-audio -no-window:
         background: true
         parallel: true
+  override:
+    - ./gradlew testDebug assembleDebugAndroidTest
     - circle-android wait-for-boot
     - ./gradlew connectedDebugAndroidTest
   post:
