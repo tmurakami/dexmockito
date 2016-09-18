@@ -1,6 +1,5 @@
 package com.github.tmurakami.dexmockito;
 
-import com.android.dex.DexFormat;
 import com.android.dx.cf.direct.DirectClassFile;
 import com.android.dx.cf.direct.StdAttributeFactory;
 import com.android.dx.dex.DexOptions;
@@ -28,19 +27,18 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
 
     private final File cacheDir;
     private final DexFileLoader dexFileLoader;
-    private final DexOptions dexOptions = new DexOptions();
-    private final CfOptions cfOptions = new CfOptions();
     private final RandomString randomString = new RandomString();
 
     DexClassLoadingStrategy(File cacheDir, DexFileLoader dexFileLoader) {
         this.cacheDir = cacheDir;
         this.dexFileLoader = dexFileLoader;
-        this.dexOptions.targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
     }
 
     @Override
     public Map<TypeDescription, Class<?>> load(ClassLoader classLoader,
                                                Map<TypeDescription, byte[]> types) {
+        DexOptions dexOptions = new DexOptions();
+        CfOptions cfOptions = new CfOptions();
         DexFile file = new DexFile(dexOptions);
         for (Map.Entry<TypeDescription, byte[]> entry : types.entrySet()) {
             String path = entry.getKey().getName().replace('.', '/') + ".class";

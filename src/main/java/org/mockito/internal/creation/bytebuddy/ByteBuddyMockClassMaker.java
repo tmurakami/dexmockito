@@ -38,10 +38,6 @@ public final class ByteBuddyMockClassMaker implements MockClassMaker {
 
     private final ClassLoaderResolver classLoaderResolver;
     private final ClassLoadingStrategy classLoadingStrategy;
-    private final ByteBuddy byteBuddy = new ByteBuddy()
-            .with(ClassFileVersion.JAVA_V6)
-            .with(TypeValidation.DISABLED)
-            .with(new SuffixingRandom("MockitoMock", ForUnnamedType.INSTANCE, "codegen"));
 
     public ByteBuddyMockClassMaker(ClassLoaderResolver classLoaderResolver, ClassLoadingStrategy classLoadingStrategy) {
         this.classLoaderResolver = classLoaderResolver;
@@ -51,7 +47,10 @@ public final class ByteBuddyMockClassMaker implements MockClassMaker {
     @Override
     public Class apply(MockCreationSettings<?> settings) {
         Class<?> typeToMock = settings.getTypeToMock();
-        DynamicType.Builder<?> builder = byteBuddy
+        DynamicType.Builder<?> builder = new ByteBuddy()
+                .with(ClassFileVersion.JAVA_V6)
+                .with(TypeValidation.DISABLED)
+                .with(new SuffixingRandom("MockitoMock", ForUnnamedType.INSTANCE, "codegen"))
                 .subclass(typeToMock)
                 .ignoreAlso(isDeclaredBy(named("groovy.lang.GroovyObjectSupport")))
                 .annotateType(typeToMock.getAnnotations())
