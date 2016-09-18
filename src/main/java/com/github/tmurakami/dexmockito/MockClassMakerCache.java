@@ -44,9 +44,9 @@ final class MockClassMakerCache implements MockClassMaker {
 
         private final int hashCode;
 
-        private Key(Object o, ReferenceQueue<? super Object> q) {
-            super(o, q);
-            hashCode = System.identityHashCode(o);
+        private Key(Object referent, ReferenceQueue<? super Object> q) {
+            super(referent, q);
+            hashCode = System.identityHashCode(referent);
         }
 
         @Override
