@@ -26,8 +26,6 @@ import java.util.logging.Logger;
 
 final class DexClassLoadingStrategy implements ClassLoadingStrategy {
 
-    private static final String LOGGER_NAME = "com.github.tmurakami.dexmockito";
-
     private final File cacheDir;
     private final DexFileLoader dexFileLoader;
     private final DexOptions dexOptions = new DexOptions();
@@ -51,37 +49,28 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
             f.setAttributeFactory(StdAttributeFactory.THE_ONE);
             file.add(CfTranslator.translate(f, bytes, cfOptions, dexOptions, file));
         }
-        try {
-            return load(file, classLoader, types);
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private Map<TypeDescription, Class<?>> load(DexFile dexFile,
-                                                ClassLoader classLoader,
-                                                Map<TypeDescription, byte[]> types)
-            throws IOException, ClassNotFoundException {
         String name = randomString.nextString();
         File jar = new File(cacheDir, name + ".jar");
-        dalvik.system.DexFile file = null;
+        dalvik.system.DexFile dexFile = null;
         try {
-            writeDexToJar(dexFile, jar);
-            file = dexFileLoader.loadDex(jar, new File(cacheDir, name + ".dex"), 0);
+            writeDexToJar(file, jar);
+            dexFile = dexFileLoader.loadDex(jar, new File(cacheDir, name + ".dex"), 0);
             Map<TypeDescription, Class<?>> classMap = new HashMap<>();
             for (TypeDescription td : types.keySet()) {
-                classMap.put(td, loadClass(file, td, classLoader));
+                classMap.put(td, loadClass(dexFile, td, classLoader));
             }
             return classMap;
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
         } finally {
-            if (file != null) {
+            if (dexFile != null) {
                 try {
-                    file.close();
+                    dexFile.close();
                 } catch (IOException ignored) {
                 }
             }
             if (jar.exists() && !jar.delete()) {
-                Logger.getLogger(LOGGER_NAME).warning("Cannot delete " + jar);
+                Logger.getLogger("com.github.tmurakami.dexmockito").warning("Cannot delete " + jar);
             }
         }
     }
@@ -98,10 +87,10 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
         }
     }
 
-    private static Class<?> loadClass(dalvik.system.DexFile file,
+    private static Class<?> loadClass(dalvik.system.DexFile dexFile,
                                       TypeDescription typeDescription,
                                       ClassLoader classLoader) throws ClassNotFoundException {
-        Class<?> c = file.loadClass(typeDescription.getName(), classLoader);
+        Class<?> c = dexFile.loadClass(typeDescription.getName(), classLoader);
         if (c == null) {
             throw new ClassNotFoundException(typeDescription.getName());
         }
