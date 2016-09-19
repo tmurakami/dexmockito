@@ -39,49 +39,42 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
                                                Map<TypeDescription, byte[]> types) {
         DexOptions dexOptions = new DexOptions();
         CfOptions cfOptions = new CfOptions();
-        DexFile file = new DexFile(dexOptions);
+        DexFile dexFile = new DexFile(dexOptions);
         for (Map.Entry<TypeDescription, byte[]> entry : types.entrySet()) {
             String path = entry.getKey().getName().replace('.', '/') + ".class";
             byte[] bytes = entry.getValue();
-            DirectClassFile f = new DirectClassFile(bytes, path, false);
-            f.setAttributeFactory(StdAttributeFactory.THE_ONE);
-            file.add(CfTranslator.translate(f, bytes, cfOptions, dexOptions, file));
+            DirectClassFile cf = new DirectClassFile(bytes, path, false);
+            cf.setAttributeFactory(StdAttributeFactory.THE_ONE);
+            dexFile.add(CfTranslator.translate(cf, bytes, cfOptions, dexOptions, dexFile));
         }
         String name = randomString.nextString();
         File jar = new File(cacheDir, name + ".jar");
-        dalvik.system.DexFile dexFile = null;
+        JarOutputStream out = null;
+        dalvik.system.DexFile loadedFile = null;
         try {
-            writeDexToJar(file, jar);
-            dexFile = dexFileLoader.loadDex(jar, new File(cacheDir, name + ".dex"), 0);
+            out = new JarOutputStream(new BufferedOutputStream(new FileOutputStream(jar)));
+            out.putNextEntry(new JarEntry("classes.dex"));
+            dexFile.writeTo(out, null, false);
+            out.close();
+            loadedFile = dexFileLoader.loadDex(jar, new File(cacheDir, name + ".dex"), 0);
             Map<TypeDescription, Class<?>> classMap = new HashMap<>();
             for (TypeDescription td : types.keySet()) {
-                classMap.put(td, loadClass(dexFile, td, classLoader));
+                classMap.put(td, loadClass(loadedFile, td, classLoader));
             }
             return classMap;
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         } finally {
-            if (dexFile != null) {
+            if (loadedFile != null) {
                 try {
-                    dexFile.close();
+                    loadedFile.close();
                 } catch (IOException ignored) {
                 }
             }
+            IOUtil.closeQuietly(out);
             if (jar.exists() && !jar.delete()) {
                 Logger.getLogger("com.github.tmurakami.dexmockito").warning("Cannot delete " + jar);
             }
-        }
-    }
-
-    private static void writeDexToJar(DexFile dexFile, File file) throws IOException {
-        JarOutputStream out = null;
-        try {
-            out = new JarOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
-            out.putNextEntry(new JarEntry("classes.dex"));
-            dexFile.writeTo(out, null, false);
-            out.closeEntry();
-        } finally {
-            IOUtil.closeQuietly(out);
         }
     }
 
