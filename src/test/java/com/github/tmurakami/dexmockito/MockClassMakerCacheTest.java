@@ -46,7 +46,7 @@ public class MockClassMakerCacheTest {
     }
 
     @Test
-    public void testCreateMockClass() throws IOException {
+    public void testCreateMockClass() throws IOException, InterruptedException {
         Map<Class<?>, ?> map = new WeakHashMap<>();
         for (int i = 0; i < 3; i++) {
             Class<C> c = redefineClass(C.class);
@@ -59,6 +59,7 @@ public class MockClassMakerCacheTest {
         Mockito.reset(mockClassMakerFactory, mockClassMaker, settings);
         do {
             System.gc();
+            Thread.sleep(500);
         } while (!map.isEmpty());
         for (Reference<?> r; (r = queue.poll()) != null; ) {
             cache.remove(r);
