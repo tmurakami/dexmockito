@@ -20,6 +20,7 @@ android {
     compileSdkVersion 24
     buildToolsVersion '24.0.2'
     defaultConfig.minSdkVersion 5
+    dexOptions.preDexLibraries !(System.getenv('CIRCLECI') as boolean)
     lintOptions.disable 'InvalidPackage'
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
