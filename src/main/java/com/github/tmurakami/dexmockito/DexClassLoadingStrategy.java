@@ -49,6 +49,7 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
         }
         String name = randomString.nextString();
         File jar = new File(cacheDir, name + ".jar");
+        DexFile dexFile;
         try {
             JarOutputStream out = new JarOutputStream(new FileOutputStream(jar));
             try {
@@ -57,36 +58,30 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
             } finally {
                 IOUtil.closeQuietly(out);
             }
-            Map<TypeDescription, Class<?>> classMap = new HashMap<>();
-            DexFile dexFile = dexFileLoader.loadDex(jar, new File(cacheDir, name + ".dex"), 0);
-            try {
-                for (TypeDescription td : types.keySet()) {
-                    classMap.put(td, loadClass(dexFile, td, classLoader));
-                }
-            } finally {
-                try {
-                    dexFile.close();
-                } catch (IOException ignored) {
-                }
-            }
-            return classMap;
-        } catch (IOException | ClassNotFoundException e) {
+            dexFile = dexFileLoader.loadDex(jar, new File(cacheDir, name + ".dex"), 0);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
             if (jar.exists() && !jar.delete()) {
                 Logger.getLogger("com.github.tmurakami.dexmockito").warning("Cannot delete " + jar);
             }
         }
-    }
-
-    private static Class<?> loadClass(DexFile dexFile,
-                                      TypeDescription typeDescription,
-                                      ClassLoader classLoader) throws ClassNotFoundException {
-        Class<?> c = dexFile.loadClass(typeDescription.getName(), classLoader);
-        if (c == null) {
-            throw new ClassNotFoundException(typeDescription.getName());
+        Map<TypeDescription, Class<?>> classMap = new HashMap<>();
+        try {
+            for (TypeDescription td : types.keySet()) {
+                Class<?> c = dexFile.loadClass(td.getName(), classLoader);
+                if (c == null) {
+                    throw new RuntimeException("Cannot load " + td.getName());
+                }
+                classMap.put(td, c);
+            }
+        } finally {
+            try {
+                dexFile.close();
+            } catch (IOException ignored) {
+            }
         }
-        return c;
+        return classMap;
     }
 
     interface DexFileLoader {
