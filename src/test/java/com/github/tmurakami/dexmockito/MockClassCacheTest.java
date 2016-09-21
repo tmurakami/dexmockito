@@ -68,9 +68,9 @@ public class MockClassCacheTest {
                 throw e.getCause();
             }
         }
+        then(task).should(times(classes.length)).run();
         assertEquals(1, result.size());
         assertEquals(C.class, result.iterator().next());
-        then(task).should(times(classes.length)).run();
     }
 
     private static class C {

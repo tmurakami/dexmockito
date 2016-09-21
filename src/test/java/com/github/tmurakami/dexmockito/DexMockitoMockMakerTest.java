@@ -10,7 +10,6 @@ import org.mockito.plugins.MockMaker;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -36,8 +35,7 @@ public class DexMockitoMockMakerTest {
         Class<C> c = C.class;
         given(mockClassMaker.apply(settings)).willReturn(c);
         given(settings.getTypeToMock()).willReturn(c);
-        Object mock = target.createMock(settings, handler);
-        assertTrue(c.isInstance(mock));
+        C mock = target.createMock(settings, handler);
         then(delegate).should().resetMock(mock, handler, settings);
     }
 

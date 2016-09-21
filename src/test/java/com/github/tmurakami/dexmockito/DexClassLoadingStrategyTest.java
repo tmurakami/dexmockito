@@ -12,8 +12,6 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.internal.util.io.IOUtil;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +24,6 @@ import dalvik.system.DexFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -61,28 +58,26 @@ public class DexClassLoadingStrategyTest {
 
     @Test
     public void testLoad() throws IOException, ClassNotFoundException {
-        ClassLoader classLoader = getClass().getClassLoader();
-        given(dexFile.loadClass(anyString(), eq(classLoader))).willAnswer(new Answer<Class>() {
-            @Override
-            public Class answer(InvocationOnMock invocation) throws Throwable {
-                return Class.forName(invocation.<String>getArgument(0), false, invocation.<ClassLoader>getArgument(1));
-            }
-        });
         given(dexLoaderFactory.loadDex(any(File.class), any(File.class), eq(0))).willReturn(dexFile);
-        Map<TypeDescription, byte[]> types = new HashMap<>();
-        Map<TypeDescription, Class> classes = new HashMap<>();
-        for (Class<?> c : new Class[]{A.class, B.class, C.class}) {
+        Class[] classes = {A.class, B.class, C.class};
+        Map<TypeDescription, byte[]> bytecodeMap = new HashMap<>();
+        Map<TypeDescription, Class> classMap = new HashMap<>();
+        for (Class<?> c : classes) {
             TypeDescription td = mock(TypeDescription.class);
             given(td.getName()).willReturn(c.getName());
             InputStream in = c.getResourceAsStream('/' + c.getName().replace('.', '/') + ".class");
             try {
-                types.put(td, StreamDrainer.DEFAULT.drain(in));
+                bytecodeMap.put(td, StreamDrainer.DEFAULT.drain(in));
             } finally {
                 IOUtil.closeQuietly(in);
             }
-            classes.put(td, c);
+            classMap.put(td, c);
         }
-        assertEquals(classes, target.load(classLoader, types));
+        ClassLoader classLoader = getClass().getClassLoader();
+        assertEquals(classMap, target.load(classLoader, bytecodeMap));
+        for (Class<?> c : classes) {
+            then(dexFile).should().loadClass(c.getName(), classLoader);
+        }
         then(dexFile).should().close();
         then(dexLoaderFactory).should().loadDex(sourceFileCaptor.capture(), outputFileCaptor.capture(), eq(0));
         File sourceFile = sourceFileCaptor.getValue();
