@@ -65,11 +65,6 @@ public class MockClassMakerCacheTest {
 
     @SuppressWarnings("unchecked")
     private static <T> Class<T> redefineClass(Class<T> c) throws IOException {
-        class Loader extends ClassLoader {
-            private Class<?> defineClass(String name, byte[] bytecode) {
-                return defineClass(name, bytecode, 0, bytecode.length);
-            }
-        }
         String name = c.getName();
         InputStream in = c.getResourceAsStream('/' + name.replace('.', '/') + ".class");
         try {
@@ -80,6 +75,17 @@ public class MockClassMakerCacheTest {
     }
 
     private static class C {
+    }
+
+    private static class Loader extends ClassLoader {
+
+        Loader() {
+        }
+
+        Class<?> defineClass(String name, byte[] bytecode) {
+            return defineClass(name, bytecode, 0, bytecode.length);
+        }
+
     }
 
 }

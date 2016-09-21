@@ -23,20 +23,25 @@ public class MockTest extends TestCase {
     }
 
     private static class Foo {
+
+        Foo() {
+        }
+
         String message() {
             return "foo";
         }
+
     }
 
     private static class Bar {
 
         private final Foo foo;
 
-        private Bar(Foo foo) {
+        Bar(Foo foo) {
             this.foo = foo;
         }
 
-        private String doIt() {
+        String doIt() {
             return foo.message();
         }
 
