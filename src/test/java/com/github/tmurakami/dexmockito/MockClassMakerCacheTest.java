@@ -15,8 +15,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
-import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -47,20 +45,18 @@ public class MockClassMakerCacheTest {
 
     @Test
     public void testCreateMockClass() throws IOException, InterruptedException {
-        Map<Class<?>, ?> map = new WeakHashMap<>();
-        for (int i = 0; i < 3; i++) {
+        int count = 5;
+        for (int i = 0; i < 5; i++) {
             Class<C> c = redefineClass(C.class);
             given(mockClassMaker.apply(any(MockCreationSettings.class))).willReturn(c);
             given(mockClassMakerFactory.get()).willReturn(mockClassMaker);
             given(settings.getTypeToMock()).willReturn(c);
-            map.put(target.apply(settings), null);
+            target.apply(settings);
         }
-        assertEquals(map.size(), cache.size());
+        assertEquals(count, cache.size());
         Mockito.reset(mockClassMakerFactory, mockClassMaker, settings);
-        do {
-            System.gc();
-            Thread.sleep(500);
-        } while (!map.isEmpty());
+        System.gc();
+        Thread.sleep(500);
         for (Reference<?> r; (r = queue.poll()) != null; ) {
             cache.remove(r);
         }
