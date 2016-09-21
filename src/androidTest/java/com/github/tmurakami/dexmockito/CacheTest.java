@@ -11,7 +11,7 @@ import static org.mockito.Mockito.mock;
 @SuppressWarnings("deprecation")
 public class CacheTest extends AndroidTestCase {
 
-    public void testDexCacheDirExists() {
+    public void testCacheDirExists() {
         File cache = new File(getContext().getCacheDir(), "dexmockito");
         assertTrue(!cache.exists() || delete(cache));
         mock(C.class);
@@ -20,7 +20,7 @@ public class CacheTest extends AndroidTestCase {
         assertTrue(cache.canWrite());
     }
 
-    public void testMockClassCache() {
+    public void testMockClassCaching() {
         Set<Class> classes = new HashSet<>();
         for (int i = 0; i < 5; i++) {
             classes.add(mock(C.class).getClass());

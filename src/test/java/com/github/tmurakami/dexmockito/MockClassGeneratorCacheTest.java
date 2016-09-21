@@ -24,37 +24,37 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 @RunWith(MockitoJUnitRunner.class)
-public class MockClassMakerCacheTest {
+public class MockClassGeneratorCacheTest {
 
     @Mock
-    MockClassMaker.Factory mockClassMakerFactory;
+    MockClassGeneratorFactory mockClassGeneratorFactory;
     @Mock
-    MockClassMaker mockClassMaker;
+    MockClassGenerator mockClassGenerator;
     @Mock
     MockCreationSettings<C> settings;
 
-    private MockClassMakerCache target;
+    private MockClassGeneratorCache target;
 
-    private final ConcurrentMap<Reference, MockClassMaker> cache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Reference, MockClassGenerator> cache = new ConcurrentHashMap<>();
     private final ReferenceQueue<Object> queue = new ReferenceQueue<>();
 
     @Before
     public void setUp() {
-        target = new MockClassMakerCache(cache, queue, mockClassMakerFactory);
+        target = new MockClassGeneratorCache(cache, queue, mockClassGeneratorFactory);
     }
 
     @Test
-    public void testCreateMockClass() throws IOException, InterruptedException {
+    public void testGenerate() throws Exception {
         int count = 5;
         for (int i = 0; i < 5; i++) {
             Class<C> c = redefineClass(C.class);
-            given(mockClassMaker.apply(any(MockCreationSettings.class))).willReturn(c);
-            given(mockClassMakerFactory.get()).willReturn(mockClassMaker);
+            given(mockClassGenerator.generate(any(MockCreationSettings.class))).willReturn(c);
+            given(mockClassGeneratorFactory.create()).willReturn(mockClassGenerator);
             given(settings.getTypeToMock()).willReturn(c);
-            target.apply(settings);
+            target.generate(settings);
         }
         assertEquals(count, cache.size());
-        Mockito.reset(mockClassMakerFactory, mockClassMaker, settings);
+        Mockito.reset(mockClassGeneratorFactory, mockClassGenerator, settings);
         System.gc();
         Thread.sleep(500);
         for (Reference<?> r; (r = queue.poll()) != null; ) {

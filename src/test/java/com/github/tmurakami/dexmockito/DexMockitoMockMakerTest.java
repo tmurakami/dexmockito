@@ -19,7 +19,7 @@ public class DexMockitoMockMakerTest {
     @Mock
     MockMaker delegate;
     @Mock
-    MockClassMaker mockClassMaker;
+    MockClassGenerator mockClassGenerator;
     @Mock
     MockCreationSettings<C> settings;
     @Mock
@@ -33,7 +33,7 @@ public class DexMockitoMockMakerTest {
     @Test
     public void testCreateMock() {
         Class<C> c = C.class;
-        given(mockClassMaker.apply(settings)).willReturn(c);
+        given(mockClassGenerator.generate(settings)).willReturn(c);
         given(settings.getTypeToMock()).willReturn(c);
         C mock = target.createMock(settings, handler);
         then(delegate).should().resetMock(mock, handler, settings);

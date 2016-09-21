@@ -1,7 +1,7 @@
 package org.mockito.internal.creation.bytebuddy;
 
-import com.github.tmurakami.dexmockito.Function;
-import com.github.tmurakami.dexmockito.MockClassMaker;
+import com.github.tmurakami.dexmockito.ClassLoaderResolver;
+import com.github.tmurakami.dexmockito.MockClassGenerator;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.ClassFileVersion;
@@ -34,18 +34,18 @@ import static net.bytebuddy.matcher.ElementMatchers.isEquals;
 import static net.bytebuddy.matcher.ElementMatchers.isHashCode;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-public final class ByteBuddyMockClassMaker implements MockClassMaker {
+public final class ByteBuddyMockClassGenerator implements MockClassGenerator {
 
     private final ClassLoaderResolver classLoaderResolver;
     private final ClassLoadingStrategy classLoadingStrategy;
 
-    public ByteBuddyMockClassMaker(ClassLoaderResolver classLoaderResolver, ClassLoadingStrategy classLoadingStrategy) {
+    public ByteBuddyMockClassGenerator(ClassLoaderResolver classLoaderResolver, ClassLoadingStrategy classLoadingStrategy) {
         this.classLoaderResolver = classLoaderResolver;
         this.classLoadingStrategy = classLoadingStrategy;
     }
 
     @Override
-    public Class apply(MockCreationSettings<?> settings) {
+    public Class generate(MockCreationSettings<?> settings) {
         Class<?> typeToMock = settings.getTypeToMock();
         DynamicType.Builder<?> builder = new ByteBuddy()
                 .with(ClassFileVersion.JAVA_V6)
@@ -63,10 +63,7 @@ public final class ByteBuddyMockClassMaker implements MockClassMaker {
         if (settings.isSerializable()) {
             builder = builder.implement(CrossClassLoaderSerializableMock.class).intercept(to(ForWriteReplace.class));
         }
-        return builder.make().load(classLoaderResolver.apply(settings), classLoadingStrategy).getLoaded();
-    }
-
-    public interface ClassLoaderResolver extends Function<MockCreationSettings<?>, ClassLoader> {
+        return builder.make().load(classLoaderResolver.resolve(settings), classLoadingStrategy).getLoaded();
     }
 
 }
