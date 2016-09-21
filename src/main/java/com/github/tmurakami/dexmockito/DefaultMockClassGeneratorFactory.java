@@ -1,6 +1,6 @@
 package com.github.tmurakami.dexmockito;
 
-import org.mockito.internal.creation.bytebuddy.ByteBuddyMockClassMaker;
+import org.mockito.internal.creation.bytebuddy.ByteBuddyMockClassGenerator;
 import org.mockito.mock.MockCreationSettings;
 
 import java.io.File;
@@ -14,43 +14,43 @@ import java.util.concurrent.FutureTask;
 
 import dalvik.system.DexFile;
 
-enum DefaultMockClassMakerFactory implements MockClassMaker.Factory {
+enum DefaultMockClassGeneratorFactory implements MockClassGeneratorFactory {
 
     INSTANCE;
 
     @Override
-    public MockClassMaker get() {
-        final ClassLoader classLoader = DefaultMockClassMakerFactory.class.getClassLoader();
+    public MockClassGenerator create() {
+        final ClassLoader classLoader = DefaultMockClassGeneratorFactory.class.getClassLoader();
         File cacheDir = CacheDir.get(new File("/data/data"), classLoader);
-        final MockClassMaker mockClassMaker = new ByteBuddyMockClassMaker(
-                new ByteBuddyMockClassMaker.ClassLoaderResolver() {
+        final MockClassGenerator mockClassGenerator = new ByteBuddyMockClassGenerator(
+                new ClassLoaderResolver() {
                     @Override
-                    public ClassLoader apply(MockCreationSettings<?> settings) {
+                    public ClassLoader resolve(MockCreationSettings<?> settings) {
                         ClassLoader loader = settings.getTypeToMock().getClassLoader();
                         return loader == null || loader == Object.class.getClassLoader() ? classLoader : loader;
                     }
                 },
                 new DexClassLoadingStrategy(
                         cacheDir,
-                        new DexClassLoadingStrategy.DexFileLoader() {
+                        new DexFileOpener() {
                             @Override
-                            public DexFile loadDex(File sourceFile, File outputFile, int flags) throws IOException {
-                                return DexFile.loadDex(sourceFile.getAbsolutePath(), outputFile.getAbsolutePath(), flags);
+                            public DexFile open(File source, File output) throws IOException {
+                                return DexFile.loadDex(source.getAbsolutePath(), output.getAbsolutePath(), 0);
                             }
                         }));
-        return new MockClassMakerCache(
-                new ConcurrentHashMap<Reference, MockClassMaker>(),
+        return new MockClassGeneratorCache(
+                new ConcurrentHashMap<Reference, MockClassGenerator>(),
                 new ReferenceQueue<>(),
-                new MockClassMaker.Factory() {
+                new MockClassGeneratorFactory() {
                     @Override
-                    public MockClassMaker get() {
-                        return new MockClassCache(new MockClassCache.TaskFactory() {
+                    public MockClassGenerator create() {
+                        return new MockClassCache(new FutureTaskFactory() {
                             @Override
-                            public FutureTask<Reference<Class>> apply(final MockCreationSettings<?> settings) {
+                            public FutureTask<Reference<Class>> create(final MockCreationSettings<?> settings) {
                                 return new FutureTask<>(new Callable<Reference<Class>>() {
                                     @Override
                                     public Reference<Class> call() throws Exception {
-                                        return new WeakReference<>(mockClassMaker.apply(settings));
+                                        return new WeakReference<>(mockClassGenerator.generate(settings));
                                     }
                                 });
                             }

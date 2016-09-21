@@ -7,37 +7,37 @@ import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ConcurrentMap;
 
-final class MockClassMakerCache implements MockClassMaker {
+final class MockClassGeneratorCache implements MockClassGenerator {
 
     private static final Object NULL = new Object();
 
-    private final ConcurrentMap<Reference, MockClassMaker> cache;
+    private final ConcurrentMap<Reference, MockClassGenerator> cache;
     private final ReferenceQueue<Object> queue;
-    private final Factory mockClassMakerFactory;
+    private final MockClassGeneratorFactory mockClassGeneratorFactory;
 
-    MockClassMakerCache(ConcurrentMap<Reference, MockClassMaker> cache,
-                        ReferenceQueue<Object> queue,
-                        Factory mockClassMakerFactory) {
+    MockClassGeneratorCache(ConcurrentMap<Reference, MockClassGenerator> cache,
+                            ReferenceQueue<Object> queue,
+                            MockClassGeneratorFactory mockClassGeneratorFactory) {
         this.cache = cache;
         this.queue = queue;
-        this.mockClassMakerFactory = mockClassMakerFactory;
+        this.mockClassGeneratorFactory = mockClassGeneratorFactory;
     }
 
     @Override
-    public Class apply(MockCreationSettings<?> settings) {
+    public Class generate(MockCreationSettings<?> settings) {
         for (Reference<?> r; (r = queue.poll()) != null; ) {
             cache.remove(r);
         }
         ClassLoader loader = settings.getTypeToMock().getClassLoader();
         Key key = new Key(loader == null ? NULL : loader, queue);
-        MockClassMaker maker = cache.get(key);
-        if (maker == null) {
-            MockClassMaker newMaker = mockClassMakerFactory.get();
-            if ((maker = cache.putIfAbsent(key, newMaker)) == null) {
-                maker = newMaker;
+        MockClassGenerator generator = cache.get(key);
+        if (generator == null) {
+            MockClassGenerator newGenerator = mockClassGeneratorFactory.create();
+            if ((generator = cache.putIfAbsent(key, newGenerator)) == null) {
+                generator = newGenerator;
             }
         }
-        return maker.apply(settings);
+        return generator.generate(settings);
     }
 
     private static class Key extends WeakReference<Object> {

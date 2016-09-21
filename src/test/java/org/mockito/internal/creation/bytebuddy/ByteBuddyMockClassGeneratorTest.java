@@ -1,5 +1,7 @@
 package org.mockito.internal.creation.bytebuddy;
 
+import com.github.tmurakami.dexmockito.ClassLoaderResolver;
+
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 
 import org.junit.Before;
@@ -24,24 +26,24 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.BDDMockito.given;
 
 @RunWith(Parameterized.class)
-public class ByteBuddyMockClassMakerTest {
+public class ByteBuddyMockClassGeneratorTest {
 
     @Mock
     MockCreationSettings<C> settings;
     @Mock
-    ByteBuddyMockClassMaker.ClassLoaderResolver classLoaderResolver;
+    ClassLoaderResolver classLoaderResolver;
 
-    private ByteBuddyMockClassMaker target;
+    private ByteBuddyMockClassGenerator target;
     private final boolean serializable;
 
-    public ByteBuddyMockClassMakerTest(boolean serializable) {
+    public ByteBuddyMockClassGeneratorTest(boolean serializable) {
         this.serializable = serializable;
     }
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        target = new ByteBuddyMockClassMaker(classLoaderResolver, ClassLoadingStrategy.Default.INJECTION);
+        target = new ByteBuddyMockClassGenerator(classLoaderResolver, ClassLoadingStrategy.Default.INJECTION);
     }
 
     @Parameterized.Parameters(name = "serializable={0}")
@@ -50,13 +52,13 @@ public class ByteBuddyMockClassMakerTest {
     }
 
     @Test
-    public void testCreateMockClass() throws Exception {
+    public void testGenerate() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
-        given(classLoaderResolver.apply(settings)).willReturn(classLoader);
+        given(classLoaderResolver.resolve(settings)).willReturn(classLoader);
         given(settings.getTypeToMock()).willReturn(C.class);
         given(settings.getExtraInterfaces()).willReturn(Collections.<Class<?>>singleton(I.class));
         given(settings.isSerializable()).willReturn(serializable);
-        Class<?> c = target.apply(settings);
+        Class<?> c = target.generate(settings);
         assertTrue(C.class.isAssignableFrom(c));
         assertTrue(I.class.isAssignableFrom(c));
         assertTrue(MockAccess.class.isAssignableFrom(c));

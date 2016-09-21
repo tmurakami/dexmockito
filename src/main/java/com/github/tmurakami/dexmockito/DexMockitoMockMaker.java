@@ -11,20 +11,20 @@ import org.objenesis.ObjenesisStd;
 public final class DexMockitoMockMaker implements MockMaker {
 
     private final MockMaker delegate;
-    private final MockClassMaker mockClassMaker;
+    private final MockClassGenerator mockClassGenerator;
 
     public DexMockitoMockMaker() {
-        this(new ObjenesisStd(false).newInstance(ByteBuddyMockMaker.class), DefaultMockClassMakerFactory.INSTANCE.get());
+        this(new ObjenesisStd(false).newInstance(ByteBuddyMockMaker.class), DefaultMockClassGeneratorFactory.INSTANCE.create());
     }
 
-    private DexMockitoMockMaker(MockMaker delegate, MockClassMaker mockClassMaker) {
+    private DexMockitoMockMaker(MockMaker delegate, MockClassGenerator mockClassGenerator) {
         this.delegate = delegate;
-        this.mockClassMaker = mockClassMaker;
+        this.mockClassGenerator = mockClassGenerator;
     }
 
     @Override
     public <T> T createMock(MockCreationSettings<T> settings, MockHandler handler) {
-        Class<?> c = mockClassMaker.apply(settings);
+        Class<?> c = mockClassGenerator.generate(settings);
         Instantiator instantiator = Plugins.getInstantiatorProvider().getInstantiator(settings);
         T mock = settings.getTypeToMock().cast(instantiator.newInstance(c));
         resetMock(mock, handler, settings);

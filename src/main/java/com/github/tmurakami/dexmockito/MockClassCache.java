@@ -9,17 +9,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
-final class MockClassCache implements MockClassMaker {
+final class MockClassCache implements MockClassGenerator {
 
-    private final TaskFactory taskFactory;
+    private final FutureTaskFactory futureTaskFactory;
     private final ConcurrentMap<Integer, Future<Reference<Class>>> cache = new ConcurrentHashMap<>();
 
-    MockClassCache(TaskFactory taskFactory) {
-        this.taskFactory = taskFactory;
+    MockClassCache(FutureTaskFactory futureTaskFactory) {
+        this.futureTaskFactory = futureTaskFactory;
     }
 
     @Override
-    public Class apply(MockCreationSettings<?> settings) {
+    public Class generate(MockCreationSettings<?> settings) {
         int hash = settings.getTypeToMock().hashCode();
         hash = 31 * hash + settings.getExtraInterfaces().hashCode();
         Integer key = hash;
@@ -33,7 +33,7 @@ final class MockClassCache implements MockClassMaker {
                 }
             }
             if (task == null) {
-                task = taskFactory.apply(settings);
+                task = futureTaskFactory.create(settings);
             }
             if (future != null) {
                 if (!cache.replace(key, future, task)) {
@@ -72,9 +72,6 @@ final class MockClassCache implements MockClassMaker {
                 Thread.currentThread().interrupt();
             }
         }
-    }
-
-    interface TaskFactory extends Function<MockCreationSettings<?>, FutureTask<Reference<Class>>> {
     }
 
 }

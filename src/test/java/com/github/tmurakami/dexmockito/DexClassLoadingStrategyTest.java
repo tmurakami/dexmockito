@@ -24,7 +24,6 @@ import dalvik.system.DexFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -37,7 +36,7 @@ public class DexClassLoadingStrategyTest {
     @Mock
     TypeDescription typeDescription;
     @Mock
-    DexClassLoadingStrategy.DexFileLoader dexLoaderFactory;
+    DexFileOpener dexFileOpener;
     @Mock
     DexFile dexFile;
 
@@ -53,12 +52,12 @@ public class DexClassLoadingStrategyTest {
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
         cacheDir = folder.newFolder();
-        target = new DexClassLoadingStrategy(cacheDir, dexLoaderFactory);
+        target = new DexClassLoadingStrategy(cacheDir, dexFileOpener);
     }
 
     @Test
-    public void testLoad() throws IOException, ClassNotFoundException {
-        given(dexLoaderFactory.loadDex(any(File.class), any(File.class), eq(0))).willReturn(dexFile);
+    public void testLoad() throws Exception {
+        given(dexFileOpener.open(any(File.class), any(File.class))).willReturn(dexFile);
         Class[] classes = {A.class, B.class, C.class};
         Map<TypeDescription, byte[]> bytecodeMap = new HashMap<>();
         Map<TypeDescription, Class> classMap = new HashMap<>();
@@ -79,7 +78,7 @@ public class DexClassLoadingStrategyTest {
             then(dexFile).should().loadClass(c.getName(), classLoader);
         }
         then(dexFile).should().close();
-        then(dexLoaderFactory).should().loadDex(sourceFileCaptor.capture(), outputFileCaptor.capture(), eq(0));
+        then(dexFileOpener).should().open(sourceFileCaptor.capture(), outputFileCaptor.capture());
         File sourceFile = sourceFileCaptor.getValue();
         assertEquals(cacheDir, sourceFile.getParentFile());
         assertTrue(sourceFile.getAbsolutePath().endsWith(".jar"));
