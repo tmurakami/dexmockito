@@ -18,17 +18,16 @@ public class MethodAnnotationTest extends TestCase {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    @interface A1 {
+    private @interface A1 {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    @interface A2 {
+    private @interface A2 {
         @SuppressWarnings("unused")
         A1[] value() default {};
     }
 
-    @SuppressWarnings("WeakerAccess")
-    static class C {
+    private static class C {
         @SuppressWarnings("unused")
         @A2
         void doIt() {

@@ -42,8 +42,7 @@ public class CacheTest extends AndroidTestCase {
         return file.delete();
     }
 
-    @SuppressWarnings("WeakerAccess")
-    static class C {
+    private static class C {
     }
 
 }

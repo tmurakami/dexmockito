@@ -22,8 +22,7 @@ public class MockTest extends TestCase {
         assertEquals("test", bar.doIt());
     }
 
-    @SuppressWarnings("WeakerAccess")
-    static class Foo {
+    private static class Foo {
         String message() {
             return "foo";
         }

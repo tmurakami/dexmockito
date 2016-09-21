@@ -74,15 +74,14 @@ public class ByteBuddyMockClassMakerTest {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    @interface A {
+    private @interface A {
     }
 
-    interface I {
+    private interface I {
     }
 
-    @SuppressWarnings("WeakerAccess")
     @A
-    static class C {
+    private static class C {
         @SuppressWarnings("unused")
         @A
         public void doIt() {
