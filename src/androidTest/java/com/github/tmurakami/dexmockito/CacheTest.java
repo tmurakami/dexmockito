@@ -13,7 +13,7 @@ public class CacheTest extends AndroidTestCase {
 
     public void testCacheDirExists() {
         File cache = new File(getContext().getCacheDir(), "dexmockito");
-        assertTrue(!cache.exists() || delete(cache));
+        assertTrue(!cache.exists() || FileUtils.forceDelete(cache));
         mock(C.class);
         assertTrue(cache.isDirectory());
         assertTrue(cache.canRead());
@@ -26,20 +26,6 @@ public class CacheTest extends AndroidTestCase {
             classes.add(mock(C.class).getClass());
         }
         assertEquals(1, classes.size());
-    }
-
-    private static boolean delete(File file) {
-        if (file.isDirectory()) {
-            File[] files = file.listFiles();
-            if (files != null) {
-                for (File f : files) {
-                    if (!delete(f)) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return file.delete();
     }
 
     private static class C {
