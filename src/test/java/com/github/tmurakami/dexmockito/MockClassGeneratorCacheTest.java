@@ -63,29 +63,22 @@ public class MockClassGeneratorCacheTest {
         assertTrue(cache.isEmpty());
     }
 
-    @SuppressWarnings("unchecked")
     private static <T> Class<T> redefineClass(Class<T> c) throws IOException {
         String name = c.getName();
         InputStream in = c.getResourceAsStream('/' + name.replace('.', '/') + ".class");
         try {
-            return (Class<T>) new Loader().defineClass(name, StreamDrainer.DEFAULT.drain(in));
+            return new ClassLoader() {
+                @SuppressWarnings("unchecked")
+                Class<T> defineClass(String name, byte[] bytecode) {
+                    return (Class<T>) defineClass(name, bytecode, 0, bytecode.length);
+                }
+            }.defineClass(name, StreamDrainer.DEFAULT.drain(in));
         } finally {
             IOUtil.closeQuietly(in);
         }
     }
 
     private static class C {
-    }
-
-    private static class Loader extends ClassLoader {
-
-        Loader() {
-        }
-
-        Class<?> defineClass(String name, byte[] bytecode) {
-            return defineClass(name, bytecode, 0, bytecode.length);
-        }
-
     }
 
 }
