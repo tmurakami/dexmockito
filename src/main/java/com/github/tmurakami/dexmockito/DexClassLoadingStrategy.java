@@ -26,12 +26,12 @@ import dalvik.system.DexFile;
 final class DexClassLoadingStrategy implements ClassLoadingStrategy {
 
     private final File cacheDir;
-    private final DexFileOpener dexFileOpener;
+    private final DexFileLoader dexFileLoader;
     private final RandomString randomString = new RandomString();
 
-    DexClassLoadingStrategy(File cacheDir, DexFileOpener dexFileOpener) {
+    DexClassLoadingStrategy(File cacheDir, DexFileLoader dexFileLoader) {
         this.cacheDir = cacheDir;
-        this.dexFileOpener = dexFileOpener;
+        this.dexFileLoader = dexFileLoader;
     }
 
     @Override
@@ -51,7 +51,7 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
         File[] files = new File[2];
         files[0] = new File(cacheDir, fileName + ".jar");
         files[1] = new File(cacheDir, fileName + ".dex");
-        DexFile openedDexFile = null;
+        DexFile loadedDexFile = null;
         try {
             JarOutputStream out = new JarOutputStream(new FileOutputStream(files[0]));
             try {
@@ -60,20 +60,20 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
             } finally {
                 IOUtil.closeQuietly(out);
             }
-            openedDexFile = dexFileOpener.open(files[0], files[1]);
+            loadedDexFile = dexFileLoader.load(files[0], files[1]);
             Map<TypeDescription, Class<?>> classMap = new HashMap<>();
             for (TypeDescription td : types.keySet()) {
                 String name = td.getName();
-                openedDexFile.loadClass(name, classLoader);
+                loadedDexFile.loadClass(name, classLoader);
                 classMap.put(td, Class.forName(name, false, classLoader));
             }
             return classMap;
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         } finally {
-            if (openedDexFile != null) {
+            if (loadedDexFile != null) {
                 try {
-                    openedDexFile.close();
+                    loadedDexFile.close();
                 } catch (IOException ignored) {
                 }
             }

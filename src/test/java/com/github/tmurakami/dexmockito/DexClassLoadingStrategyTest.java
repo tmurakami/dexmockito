@@ -35,7 +35,7 @@ public class DexClassLoadingStrategyTest {
     public final TemporaryFolder folder = new TemporaryFolder();
 
     @Mock
-    DexFileOpener dexFileOpener;
+    DexFileLoader dexFileLoader;
     @Mock
     DexFile dexFile;
 
@@ -51,12 +51,12 @@ public class DexClassLoadingStrategyTest {
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
         cacheDir = folder.newFolder();
-        target = new DexClassLoadingStrategy(cacheDir, dexFileOpener);
+        target = new DexClassLoadingStrategy(cacheDir, dexFileLoader);
     }
 
     @Test
     public void testLoad() throws Exception {
-        given(dexFileOpener.open(any(File.class), any(File.class))).willReturn(dexFile);
+        given(dexFileLoader.load(any(File.class), any(File.class))).willReturn(dexFile);
         Class[] classes = {A.class, B.class, C.class};
         Map<TypeDescription, byte[]> bytecodeMap = new HashMap<>();
         Map<TypeDescription, Class> classMap = new HashMap<>();
@@ -77,7 +77,7 @@ public class DexClassLoadingStrategyTest {
             then(dexFile).should().loadClass(c.getName(), classLoader);
         }
         then(dexFile).should().close();
-        then(dexFileOpener).should().open(sourceCaptor.capture(), outputCaptor.capture());
+        then(dexFileLoader).should().load(sourceCaptor.capture(), outputCaptor.capture());
         File[] files = {sourceCaptor.getValue(), outputCaptor.getValue()};
         for (File f : files) {
             assertFalse(f.exists());

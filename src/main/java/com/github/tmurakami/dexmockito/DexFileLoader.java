@@ -5,6 +5,6 @@ import java.io.IOException;
 
 import dalvik.system.DexFile;
 
-interface DexFileOpener {
-    DexFile open(File source, File output) throws IOException;
+interface DexFileLoader {
+    DexFile load(File source, File output) throws IOException;
 }
