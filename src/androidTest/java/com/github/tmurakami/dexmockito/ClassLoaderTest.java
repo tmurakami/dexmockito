@@ -29,7 +29,7 @@ public class ClassLoaderTest extends AndroidTestCase {
     @Mock
     TypeDescription typeDescription;
     @Mock
-    DexFileOpener dexFileOpener;
+    DexFileLoader dexFileLoader;
 
     @Override
     protected void setUp() throws Exception {
@@ -40,7 +40,7 @@ public class ClassLoaderTest extends AndroidTestCase {
     public void testLoadByCustomClassLoader() throws IOException {
         String name = getClass().getName() + "$C";
         given(typeDescription.getName()).willReturn(name);
-        given(dexFileOpener.open(any(File.class), any(File.class))).will(new Answer<DexFile>() {
+        given(dexFileLoader.load(any(File.class), any(File.class))).will(new Answer<DexFile>() {
             @Override
             public DexFile answer(InvocationOnMock invocation) throws Throwable {
                 File source = invocation.getArgument(0);
@@ -58,7 +58,7 @@ public class ClassLoaderTest extends AndroidTestCase {
         Map<TypeDescription, Class<?>> classMap;
         try {
             assertTrue(cacheDir.mkdir());
-            classMap = new DexClassLoadingStrategy(cacheDir, dexFileOpener).load(loader, bytecodeMap);
+            classMap = new DexClassLoadingStrategy(cacheDir, dexFileLoader).load(loader, bytecodeMap);
         } finally {
             assertTrue(FileUtils.forceDelete(cacheDir));
         }

@@ -32,9 +32,9 @@ enum DefaultMockClassGeneratorFactory implements MockClassGeneratorFactory {
                 },
                 new DexClassLoadingStrategy(
                         cacheDir,
-                        new DexFileOpener() {
+                        new DexFileLoader() {
                             @Override
-                            public DexFile open(File source, File output) throws IOException {
+                            public DexFile load(File source, File output) throws IOException {
                                 return DexFile.loadDex(source.getAbsolutePath(), output.getAbsolutePath(), 0);
                             }
                         }));
