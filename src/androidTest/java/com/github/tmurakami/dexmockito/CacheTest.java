@@ -1,15 +1,12 @@
 package com.github.tmurakami.dexmockito;
 
-import android.test.AndroidTestCase;
-
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
 import static org.mockito.Mockito.mock;
 
-@SuppressWarnings("deprecation")
-public class CacheTest extends AndroidTestCase {
+public class CacheTest extends BaseAndroidTestCase {
 
     public void testCacheDirExists() {
         File cache = new File(getContext().getCacheDir(), "dexmockito");

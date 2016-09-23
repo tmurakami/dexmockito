@@ -33,10 +33,9 @@ public class MockClassGeneratorCacheTest {
     @Mock
     MockCreationSettings<C> settings;
 
-    private MockClassGeneratorCache target;
-
     private final ConcurrentMap<Reference, MockClassGenerator> cache = new ConcurrentHashMap<>();
     private final ReferenceQueue<Object> queue = new ReferenceQueue<>();
+    private MockClassGeneratorCache target;
 
     @Before
     public void setUp() {
