@@ -32,7 +32,7 @@ public class MockClassCacheTest {
     @Mock
     FutureTask<Reference<Class>> futureTask;
     @Mock
-    Reference<Class> ref;
+    Reference<Class> reference;
     @Mock
     MockCreationSettings<C> settings;
 
@@ -42,11 +42,11 @@ public class MockClassCacheTest {
     @Test
     public void testGenerate() throws Throwable {
         Class[] classes = {null, C.class};
-        BDDMockito.BDDMyOngoingStubbing<Class> stubbing = given(ref.get());
+        BDDMockito.BDDMyOngoingStubbing<Class> stubbing = given(reference.get());
         for (Class<?> c : classes) {
             stubbing = stubbing.willReturn(c);
         }
-        given(futureTask.get()).willReturn(ref);
+        given(futureTask.get()).willReturn(reference);
         given(futureTaskFactory.create(settings)).willReturn(futureTask);
         given(settings.getTypeToMock()).willReturn(C.class);
         int count = 10;

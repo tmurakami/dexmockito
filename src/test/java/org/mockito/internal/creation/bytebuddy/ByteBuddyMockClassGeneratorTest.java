@@ -33,8 +33,8 @@ public class ByteBuddyMockClassGeneratorTest {
     @Mock
     ClassLoaderResolver classLoaderResolver;
 
-    private ByteBuddyMockClassGenerator target;
     private final boolean serializable;
+    private ByteBuddyMockClassGenerator target;
 
     public ByteBuddyMockClassGeneratorTest(boolean serializable) {
         this.serializable = serializable;

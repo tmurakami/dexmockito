@@ -1,7 +1,5 @@
 package com.github.tmurakami.dexmockito;
 
-import android.test.AndroidTestCase;
-
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.jar.asm.ClassWriter;
 import net.bytebuddy.jar.asm.Type;
@@ -23,8 +21,7 @@ import static net.bytebuddy.jar.asm.Opcodes.V1_6;
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.given;
 
-@SuppressWarnings("deprecation")
-public class ClassLoaderTest extends AndroidTestCase {
+public class ClassLoaderTest extends BaseAndroidTestCase {
 
     @Mock
     TypeDescription typeDescription;
