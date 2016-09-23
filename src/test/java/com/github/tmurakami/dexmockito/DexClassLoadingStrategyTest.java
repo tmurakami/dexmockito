@@ -22,6 +22,7 @@ import java.util.Map;
 import dalvik.system.DexFile;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -34,16 +35,14 @@ public class DexClassLoadingStrategyTest {
     public final TemporaryFolder folder = new TemporaryFolder();
 
     @Mock
-    TypeDescription typeDescription;
-    @Mock
     DexFileOpener dexFileOpener;
     @Mock
     DexFile dexFile;
 
     @Captor
-    ArgumentCaptor<File> sourceFileCaptor;
+    ArgumentCaptor<File> sourceCaptor;
     @Captor
-    ArgumentCaptor<File> outputFileCaptor;
+    ArgumentCaptor<File> outputCaptor;
 
     private File cacheDir;
     private DexClassLoadingStrategy target;
@@ -78,13 +77,14 @@ public class DexClassLoadingStrategyTest {
             then(dexFile).should().loadClass(c.getName(), classLoader);
         }
         then(dexFile).should().close();
-        then(dexFileOpener).should().open(sourceFileCaptor.capture(), outputFileCaptor.capture());
-        File sourceFile = sourceFileCaptor.getValue();
-        assertEquals(cacheDir, sourceFile.getParentFile());
-        assertTrue(sourceFile.getAbsolutePath().endsWith(".jar"));
-        File outputFile = outputFileCaptor.getValue();
-        assertEquals(cacheDir, outputFile.getParentFile());
-        assertTrue(outputFileCaptor.getValue().getAbsolutePath().endsWith(".dex"));
+        then(dexFileOpener).should().open(sourceCaptor.capture(), outputCaptor.capture());
+        File[] files = {sourceCaptor.getValue(), outputCaptor.getValue()};
+        for (File f : files) {
+            assertFalse(f.exists());
+            assertEquals(cacheDir, f.getParentFile());
+        }
+        assertTrue(files[0].getAbsolutePath().endsWith(".jar"));
+        assertTrue(files[1].getAbsolutePath().endsWith(".dex"));
     }
 
     private static class A {
