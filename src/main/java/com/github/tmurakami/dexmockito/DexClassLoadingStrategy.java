@@ -48,17 +48,19 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
             dexFile.add(CfTranslator.translate(cf, bytes, cfOptions, dexOptions, dexFile));
         }
         String fileName = randomString.nextString();
-        File jar = new File(cacheDir, fileName + ".jar");
+        File[] files = new File[2];
+        files[0] = new File(cacheDir, fileName + ".jar");
+        files[1] = new File(cacheDir, fileName + ".dex");
         DexFile openedDexFile = null;
         try {
-            JarOutputStream out = new JarOutputStream(new FileOutputStream(jar));
+            JarOutputStream out = new JarOutputStream(new FileOutputStream(files[0]));
             try {
                 out.putNextEntry(new JarEntry("classes.dex"));
                 dexFile.writeTo(out, null, false);
             } finally {
                 IOUtil.closeQuietly(out);
             }
-            openedDexFile = dexFileOpener.open(jar, new File(cacheDir, fileName + ".dex"));
+            openedDexFile = dexFileOpener.open(files[0], files[1]);
             Map<TypeDescription, Class<?>> classMap = new HashMap<>();
             for (TypeDescription td : types.keySet()) {
                 String name = td.getName();
@@ -75,8 +77,10 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
                 } catch (IOException ignored) {
                 }
             }
-            if (jar.exists() && !jar.delete()) {
-                Logger.getLogger("com.github.tmurakami.dexmockito").warning("Cannot delete " + jar);
+            for (File f : files) {
+                if (f.exists() && !f.delete()) {
+                    Logger.getLogger("com.github.tmurakami.dexmockito").warning("Cannot delete " + f);
+                }
             }
         }
     }
