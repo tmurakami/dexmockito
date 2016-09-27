@@ -70,9 +70,9 @@ android.libraryVariants.all {
             into outputs.files.find { it.name == 'assets' }
         }
     }
+    def inputDir = "$buildDir/intermediates/pre-jarjared/$dirName"
     def taskNameSuffix = name.capitalize()
     def jarTask = tasks["transformClassesAndResourcesWithSyncLibJarsFor$taskNameSuffix"]
-    def inputDir = "$buildDir/intermediates/pre-jarjared/$dirName"
     def outputFile = jarTask.outputs.files.find { it.name == 'classes.jar' }
     jarTask.with {
         outputs.dir inputDir
@@ -80,7 +80,6 @@ android.libraryVariants.all {
             ant.move(file: outputFile, toDir: inputDir)
         }
     }
-    def repackaged = "${applicationId}.repackaged"
     def jarjarTask = task("jarjar$taskNameSuffix") {
         inputs.dir inputDir
         outputs.file outputFile
@@ -92,12 +91,9 @@ android.libraryVariants.all {
                 jarjar(jarfile: outputFile) {
                     inputs.files.each { zipfileset src: it }
                     configurations.provided.each { zipfileset src: it }
-                    zap pattern: 'com.android.dx.**._tests.*'
-                    zap pattern: 'com.android.dx.command.**'
-                    zap pattern: 'com.android.dx.gen.**'
-                    zap pattern: 'com.android.dx.merge.**'
-                    zap pattern: 'junit.**'
-                    rule pattern: 'com.android.dx.**', result: "${repackaged}.com.android.dx.@1"
+                    keep pattern: "${applicationId}.**"
+                    keep pattern: 'com.android.dx.dex.cf.CfTranslator'
+                    rule pattern: 'com.android.dx.**', result: "${applicationId}.repackaged.com.android.dx.@1"
                 }
             }
         }
