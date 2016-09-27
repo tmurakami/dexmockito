@@ -39,6 +39,10 @@ configurations {
     jarjar
 }
 
+afterEvaluate {
+    tasks['processDebugJavaRes'] as Sync
+}
+
 dependencies {
     jarjar 'com.googlecode.jarjar:jarjar:1.3'
     compile 'org.mockito:mockito-core:2.1.0-RC.1'
@@ -49,6 +53,7 @@ dependencies {
 
 task sourcesJar(type: Jar) {
     classifier = 'sources'
+    from "$rootDir/LICENSE"
     from android.sourceSets.main.java.sourceFiles
     from android.sourceSets.main.resources.sourceFiles
 }
@@ -58,9 +63,16 @@ artifacts {
 }
 
 android.libraryVariants.all {
-    def capitalizedName = it.name.capitalize()
-    def jarTask = tasks["transformClassesAndResourcesWithSyncLibJarsFor$capitalizedName"]
-    def inputDir = "$buildDir/intermediates/pre-jarjared/$it.dirName"
+    mergeAssets << {
+        copy {
+            from "$rootDir/LICENSE"
+            from "$rootDir/dx-NOTICE"
+            into outputs.files.find { it.name == 'assets' }
+        }
+    }
+    def taskNameSuffix = name.capitalize()
+    def jarTask = tasks["transformClassesAndResourcesWithSyncLibJarsFor$taskNameSuffix"]
+    def inputDir = "$buildDir/intermediates/pre-jarjared/$dirName"
     def outputFile = jarTask.outputs.files.find { it.name == 'classes.jar' }
     jarTask.with {
         outputs.dir inputDir
@@ -68,8 +80,8 @@ android.libraryVariants.all {
             ant.move(file: outputFile, toDir: inputDir)
         }
     }
-    def repackaged = "${it.applicationId}.repackaged"
-    def jarjarTask = task("jarjar$capitalizedName") {
+    def repackaged = "${applicationId}.repackaged"
+    def jarjarTask = task("jarjar$taskNameSuffix") {
         inputs.dir inputDir
         outputs.file outputFile
         doFirst {
@@ -91,5 +103,5 @@ android.libraryVariants.all {
         }
     }
     jarjarTask.dependsOn jarTask
-    tasks["bundle$capitalizedName"].dependsOn jarjarTask
+    tasks["bundle$taskNameSuffix"].dependsOn jarjarTask
 }
