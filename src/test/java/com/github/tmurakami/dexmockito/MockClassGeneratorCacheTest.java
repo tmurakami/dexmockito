@@ -66,12 +66,7 @@ public class MockClassGeneratorCacheTest {
         String name = c.getName();
         InputStream in = c.getResourceAsStream('/' + name.replace('.', '/') + ".class");
         try {
-            return new ClassLoader() {
-                @SuppressWarnings("unchecked")
-                Class<T> defineClass(String name, byte[] bytecode) {
-                    return (Class<T>) defineClass(name, bytecode, 0, bytecode.length);
-                }
-            }.defineClass(name, StreamDrainer.DEFAULT.drain(in));
+            return new TestClassLoader().defineClass(name, StreamDrainer.DEFAULT.drain(in));
         } finally {
             IOUtil.closeQuietly(in);
         }

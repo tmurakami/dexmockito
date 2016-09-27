@@ -46,9 +46,7 @@ public class ClassLoaderTest extends BaseAndroidTestCase {
             }
         });
         Map<TypeDescription, byte[]> bytecodeMap = new HashMap<>();
-        ClassWriter cw = new ClassWriter(0);
-        cw.visit(V1_6, 0, name.replace('.', '/'), null, Type.getInternalName(Object.class), null);
-        bytecodeMap.put(typeDescription, cw.toByteArray());
+        bytecodeMap.put(typeDescription, generateBytecode(name));
         File cacheDir = new File(getContext().getCacheDir(), getClass().getSimpleName().toLowerCase(Locale.US));
         ClassLoader loader = new ClassLoader() {
         };
@@ -63,6 +61,13 @@ public class ClassLoaderTest extends BaseAndroidTestCase {
         assertNotNull(c);
         assertEquals(name, c.getName());
         assertEquals(loader, c.getClassLoader());
+    }
+
+    private static byte[] generateBytecode(String name) {
+        ClassWriter cw = new ClassWriter(0);
+        cw.visit(V1_6, 0, name.replace('.', '/'), null, Type.getInternalName(Object.class), null);
+        cw.visitEnd();
+        return cw.toByteArray();
     }
 
 }

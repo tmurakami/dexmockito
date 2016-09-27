@@ -16,3 +16,7 @@ dependencies {
     androidTestCompile 'com.github.tmurakami:dexmockito:x.y.z'
 }
 ```
+
+## Notice
+
+This library includes [com.google.android.tools:dx:1.7](https://bintray.com/bintray/jcenter/com.google.android.tools%3Adx) that has been repackaged using [Jar Jar Links](https://code.google.com/archive/p/jarjar/).
