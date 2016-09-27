@@ -19,32 +19,77 @@ version = '0.4.0-SNAPSHOT'
 android {
     compileSdkVersion 24
     buildToolsVersion '24.0.2'
-    defaultConfig.minSdkVersion 5
-    dexOptions.preDexLibraries !(System.getenv('CIRCLECI') as boolean)
-    lintOptions.disable 'InvalidPackage'
+    defaultConfig {
+        minSdkVersion 5
+        testInstrumentationRunnerArguments.package = group
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
     }
+    lintOptions.disable 'InvalidPackage'
+    dexOptions.preDexLibraries !(System.getenv('CIRCLECI') as boolean)
 }
 
 repositories {
     jcenter()
 }
 
+configurations {
+    jarjar
+}
+
 dependencies {
+    jarjar 'com.googlecode.jarjar:jarjar:1.3'
     compile 'org.mockito:mockito-core:2.1.0-RC.1'
     compile 'net.bytebuddy:byte-buddy:1.4.26'
-    compile 'com.jakewharton.android.repackaged:dalvik-dx:1'
+    provided 'com.google.android.tools:dx:1.7'
     testCompile 'junit:junit:4.12'
 }
 
 task sourcesJar(type: Jar) {
     classifier = 'sources'
-    from android.sourceSets.main.java.source
-    from android.sourceSets.main.resources.source
+    from android.sourceSets.main.java.sourceFiles
+    from android.sourceSets.main.resources.sourceFiles
 }
 
 artifacts {
     archives sourcesJar
+}
+
+android.libraryVariants.all {
+    def capitalizedName = it.name.capitalize()
+    def jarTask = tasks["transformClassesAndResourcesWithSyncLibJarsFor$capitalizedName"]
+    def inputDir = "$buildDir/intermediates/pre-jarjared/$it.dirName"
+    def outputFile = jarTask.outputs.files.find { it.name == 'classes.jar' }
+    jarTask.with {
+        outputs.dir inputDir
+        doLast {
+            ant.move(file: outputFile, toDir: inputDir)
+        }
+    }
+    def repackaged = "${it.applicationId}.repackaged"
+    def jarjarTask = task("jarjar$capitalizedName") {
+        inputs.dir(inputDir).skipWhenEmpty()
+        outputs.file outputFile
+        doFirst {
+            ant {
+                taskdef name: 'jarjar',
+                        classname: 'com.tonicsystems.jarjar.JarJarTask',
+                        classpath: configurations.jarjar.asPath
+                jarjar(jarfile: outputFile) {
+                    inputs.files.each { zipfileset src: it }
+                    configurations.provided.each { zipfileset src: it }
+                    zap pattern: 'com.android.dx.**._tests.*'
+                    zap pattern: 'com.android.dx.command.**'
+                    zap pattern: 'com.android.dx.gen.**'
+                    zap pattern: 'com.android.dx.merge.**'
+                    zap pattern: 'junit.**'
+                    rule pattern: 'com.android.dx.**', result: "${repackaged}.com.android.dx.@1"
+                }
+            }
+        }
+    }
+    jarjarTask.mustRunAfter jarTask
+    tasks["bundle$capitalizedName"].dependsOn jarjarTask
 }

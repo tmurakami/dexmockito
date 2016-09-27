@@ -1,7 +1,6 @@
 package com.github.tmurakami.dexmockito;
 
-import com.android.dx.cf.direct.DirectClassFile;
-import com.android.dx.cf.direct.StdAttributeFactory;
+import com.android.dx.dex.DexFormat;
 import com.android.dx.dex.DexOptions;
 import com.android.dx.dex.cf.CfOptions;
 import com.android.dx.dex.cf.CfTranslator;
@@ -38,14 +37,12 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
     public Map<TypeDescription, Class<?>> load(ClassLoader classLoader,
                                                Map<TypeDescription, byte[]> types) {
         DexOptions dexOptions = new DexOptions();
+        dexOptions.targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
         CfOptions cfOptions = new CfOptions();
         com.android.dx.dex.file.DexFile dexFile = new com.android.dx.dex.file.DexFile(dexOptions);
         for (Map.Entry<TypeDescription, byte[]> e : types.entrySet()) {
             String path = e.getKey().getName().replace('.', '/') + ".class";
-            byte[] bytes = e.getValue();
-            DirectClassFile cf = new DirectClassFile(bytes, path, false);
-            cf.setAttributeFactory(StdAttributeFactory.THE_ONE);
-            dexFile.add(CfTranslator.translate(cf, bytes, cfOptions, dexOptions, dexFile));
+            dexFile.add(CfTranslator.translate(path, e.getValue(), cfOptions, dexOptions));
         }
         String fileName = randomString.nextString();
         File[] files = new File[2];
