@@ -1,7 +1,8 @@
 package com.github.tmurakami.dexmockito;
 
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.utility.StreamDrainer;
+import net.bytebuddy.jar.asm.ClassWriter;
+import net.bytebuddy.jar.asm.Type;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -11,17 +12,16 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.internal.util.io.IOUtil;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 import dalvik.system.DexFile;
 
+import static net.bytebuddy.jar.asm.Opcodes.V1_6;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -57,25 +57,22 @@ public class DexClassLoadingStrategyTest {
 
     @Test
     public void testLoad() throws Exception {
-        given(dexFileLoader.load(any(File.class), any(File.class))).willReturn(dexFile);
-        Class[] classes = {A.class, B.class, C.class};
+        String baseName = getClass().getName();
+        String[] names = {baseName + "$A", baseName + "$B", baseName + "$C"};
         Map<TypeDescription, byte[]> bytecodeMap = new HashMap<>();
         Map<TypeDescription, Class> classMap = new HashMap<>();
-        for (Class<?> c : classes) {
+        TestClassLoader classLoader = new TestClassLoader();
+        for (String name : names) {
             TypeDescription td = mock(TypeDescription.class);
-            given(td.getName()).willReturn(c.getName());
-            InputStream in = c.getResourceAsStream('/' + c.getName().replace('.', '/') + ".class");
-            try {
-                bytecodeMap.put(td, StreamDrainer.DEFAULT.drain(in));
-            } finally {
-                IOUtil.closeQuietly(in);
-            }
-            classMap.put(td, c);
+            given(td.getName()).willReturn(name);
+            byte[] bytecode = generateBytecode(name);
+            bytecodeMap.put(td, bytecode);
+            classMap.put(td, classLoader.defineClass(name, bytecode));
         }
-        ClassLoader classLoader = getClass().getClassLoader();
+        given(dexFileLoader.load(any(File.class), any(File.class))).willReturn(dexFile);
         assertEquals(classMap, target.load(classLoader, bytecodeMap));
-        for (Class<?> c : classes) {
-            then(dexFile).should().loadClass(c.getName(), classLoader);
+        for (String name : names) {
+            then(dexFile).should().loadClass(name, classLoader);
         }
         then(dexFile).should().close();
         then(dexFileLoader).should().load(sourceCaptor.capture(), outputCaptor.capture());
@@ -88,13 +85,11 @@ public class DexClassLoadingStrategyTest {
         assertTrue(files[1].getAbsolutePath().endsWith(".dex"));
     }
 
-    private static class A {
-    }
-
-    private static class B {
-    }
-
-    private static class C {
+    private static byte[] generateBytecode(String name) {
+        ClassWriter cw = new ClassWriter(0);
+        cw.visit(V1_6, 0, name.replace('.', '/'), null, Type.getInternalName(Object.class), null);
+        cw.visitEnd();
+        return cw.toByteArray();
     }
 
 }
