@@ -14,7 +14,7 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.github.ben-manes.versions'
 
 group = 'com.github.tmurakami'
-version = '0.4.0'
+version = '0.5.0-SNAPSHOT'
 
 android {
     compileSdkVersion 24
@@ -70,7 +70,7 @@ android.libraryVariants.all {
     }
     def repackaged = "${it.applicationId}.repackaged"
     def jarjarTask = task("jarjar$capitalizedName") {
-        inputs.dir(inputDir).skipWhenEmpty()
+        inputs.dir inputDir
         outputs.file outputFile
         doFirst {
             ant {
@@ -90,6 +90,6 @@ android.libraryVariants.all {
             }
         }
     }
-    jarjarTask.mustRunAfter jarTask
+    jarjarTask.dependsOn jarTask
     tasks["bundle$capitalizedName"].dependsOn jarjarTask
 }
