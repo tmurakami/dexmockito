@@ -12,25 +12,31 @@ final class CacheDir {
     }
 
     static File get(File root, ClassLoader classLoader) {
-        Enumeration<URL> res;
+        File dataRoot = new File(root, "data/data");
         try {
-            res = classLoader.getResources("AndroidManifest.xml");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        while (res.hasMoreElements()) {
-            String path = res.nextElement().getPath();
-            int hyphen = path.lastIndexOf('-');
-            if (hyphen == -1) {
-                continue;
-            }
-            File data = new File(root, new File(path.substring(0, hyphen)).getName());
-            if (data.exists()) {
+            Enumeration<URL> enu = classLoader.getResources("AndroidManifest.xml");
+            while (enu.hasMoreElements()) {
+                String path = enu.nextElement().getPath();
+                int hyphen = path.lastIndexOf('-');
+                if (hyphen == -1) {
+                    continue;
+                }
+                path = path.substring(0, hyphen);
+                int slash = path.lastIndexOf('/');
+                if (slash == -1) {
+                    continue;
+                }
+                File data = new File(dataRoot, path.substring(slash));
+                if (!data.exists()) {
+                    continue;
+                }
                 File dir = new File(data, "cache/dexmockito");
                 if (dir.isDirectory() && dir.canRead() && dir.canWrite() || dir.mkdirs()) {
-                    return dir;
+                    return dir.getCanonicalFile();
                 }
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
         throw new RuntimeException("Cannot access DexMockito cache directory");
     }

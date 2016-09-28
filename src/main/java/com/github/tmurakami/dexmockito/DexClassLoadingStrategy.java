@@ -39,38 +39,38 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
         DexOptions dexOptions = new DexOptions();
         dexOptions.targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
         CfOptions cfOptions = new CfOptions();
-        com.android.dx.dex.file.DexFile dexFile = new com.android.dx.dex.file.DexFile(dexOptions);
+        com.android.dx.dex.file.DexFile dxDexFile = new com.android.dx.dex.file.DexFile(dexOptions);
         for (Map.Entry<TypeDescription, byte[]> e : types.entrySet()) {
             String path = e.getKey().getName().replace('.', '/') + ".class";
-            dexFile.add(CfTranslator.translate(path, e.getValue(), cfOptions, dexOptions));
+            dxDexFile.add(CfTranslator.translate(path, e.getValue(), cfOptions, dexOptions));
         }
         String fileName = randomString.nextString();
         File[] files = new File[2];
         files[0] = new File(cacheDir, fileName + ".jar");
         files[1] = new File(cacheDir, fileName + ".dex");
-        DexFile loadedDexFile = null;
+        DexFile dexFile = null;
         try {
             JarOutputStream out = new JarOutputStream(new FileOutputStream(files[0]));
             try {
                 out.putNextEntry(new JarEntry("classes.dex"));
-                dexFile.writeTo(out, null, false);
+                dxDexFile.writeTo(out, null, false);
             } finally {
                 IOUtil.closeQuietly(out);
             }
-            loadedDexFile = dexFileLoader.load(files[0], files[1]);
+            dexFile = dexFileLoader.load(files[0].getCanonicalPath(), files[1].getCanonicalPath());
             Map<TypeDescription, Class<?>> classMap = new HashMap<>();
             for (TypeDescription td : types.keySet()) {
                 String name = td.getName();
-                loadedDexFile.loadClass(name, classLoader);
+                dexFile.loadClass(name, classLoader);
                 classMap.put(td, Class.forName(name, false, classLoader));
             }
             return classMap;
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         } finally {
-            if (loadedDexFile != null) {
+            if (dexFile != null) {
                 try {
-                    loadedDexFile.close();
+                    dexFile.close();
                 } catch (IOException ignored) {
                 }
             }

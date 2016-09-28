@@ -18,7 +18,7 @@ import java.util.Map;
 import dalvik.system.DexFile;
 
 import static net.bytebuddy.jar.asm.Opcodes.V1_6;
-import static org.mockito.BDDMockito.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 
 public class ClassLoaderTest extends BaseAndroidTestCase {
@@ -37,12 +37,12 @@ public class ClassLoaderTest extends BaseAndroidTestCase {
     public void testLoadByCustomClassLoader() throws IOException {
         String name = getClass().getName() + "$C";
         given(typeDescription.getName()).willReturn(name);
-        given(dexFileLoader.load(any(File.class), any(File.class))).will(new Answer<DexFile>() {
+        given(dexFileLoader.load(anyString(), anyString())).will(new Answer<DexFile>() {
             @Override
             public DexFile answer(InvocationOnMock invocation) throws Throwable {
-                File source = invocation.getArgument(0);
-                File output = invocation.getArgument(1);
-                return DexFile.loadDex(source.getAbsolutePath(), output.getAbsolutePath(), 0);
+                String sourcePathName = invocation.getArgument(0);
+                String outputPathName = invocation.getArgument(1);
+                return DexFile.loadDex(sourcePathName, outputPathName, 0);
             }
         });
         Map<TypeDescription, byte[]> bytecodeMap = new HashMap<>();

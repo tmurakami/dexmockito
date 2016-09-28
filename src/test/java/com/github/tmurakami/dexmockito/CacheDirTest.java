@@ -55,9 +55,9 @@ public class CacheDirTest {
         given(resources.hasMoreElements()).willReturn(true, false);
         URL url = new URL("jar:file:" + apkPath + "!/AndroidManifest.xml");
         given(resources.nextElement()).willReturn(url).willThrow(new NoSuchElementException());
-        folder.newFolder("a.b.c");
+        folder.newFolder("data", "data", "a.b.c");
         File root = folder.getRoot();
-        assertEquals(new File(root, "a.b.c/cache/dexmockito"), CacheDir.get(root, classLoader));
+        assertEquals(new File(root, "data/data/a.b.c/cache/dexmockito"), CacheDir.get(root, classLoader));
     }
 
 }

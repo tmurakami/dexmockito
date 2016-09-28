@@ -25,7 +25,7 @@ import static net.bytebuddy.jar.asm.Opcodes.V1_6;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -42,9 +42,9 @@ public class DexClassLoadingStrategyTest {
     DexFile dexFile;
 
     @Captor
-    ArgumentCaptor<File> sourceCaptor;
+    ArgumentCaptor<String> sourcePathNameCaptor;
     @Captor
-    ArgumentCaptor<File> outputCaptor;
+    ArgumentCaptor<String> outputPathNameCaptor;
 
     private File cacheDir;
     private DexClassLoadingStrategy target;
@@ -69,20 +69,20 @@ public class DexClassLoadingStrategyTest {
             bytecodeMap.put(td, bytecode);
             classMap.put(td, classLoader.defineClass(name, bytecode));
         }
-        given(dexFileLoader.load(any(File.class), any(File.class))).willReturn(dexFile);
+        given(dexFileLoader.load(anyString(), anyString())).willReturn(dexFile);
         assertEquals(classMap, target.load(classLoader, bytecodeMap));
         for (String name : names) {
             then(dexFile).should().loadClass(name, classLoader);
         }
         then(dexFile).should().close();
-        then(dexFileLoader).should().load(sourceCaptor.capture(), outputCaptor.capture());
-        File[] files = {sourceCaptor.getValue(), outputCaptor.getValue()};
+        then(dexFileLoader).should().load(sourcePathNameCaptor.capture(), outputPathNameCaptor.capture());
+        File[] files = {new File(sourcePathNameCaptor.getValue()), new File(outputPathNameCaptor.getValue())};
         for (File f : files) {
             assertFalse(f.exists());
             assertEquals(cacheDir, f.getParentFile());
         }
-        assertTrue(files[0].getAbsolutePath().endsWith(".jar"));
-        assertTrue(files[1].getAbsolutePath().endsWith(".dex"));
+        assertTrue(files[0].getName().endsWith(".jar"));
+        assertTrue(files[1].getName().endsWith(".dex"));
     }
 
     private static byte[] generateBytecode(String name) {
