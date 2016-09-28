@@ -21,7 +21,7 @@ enum DefaultMockClassGeneratorFactory implements MockClassGeneratorFactory {
     @Override
     public MockClassGenerator create() {
         final ClassLoader classLoader = DefaultMockClassGeneratorFactory.class.getClassLoader();
-        File cacheDir = CacheDir.get(new File("/data/data"), classLoader);
+        File cacheDir = CacheDir.get(new File("/"), classLoader);
         final MockClassGenerator mockClassGenerator = new ByteBuddyMockClassGenerator(
                 new ClassLoaderResolver() {
                     @Override
@@ -34,8 +34,8 @@ enum DefaultMockClassGeneratorFactory implements MockClassGeneratorFactory {
                         cacheDir,
                         new DexFileLoader() {
                             @Override
-                            public DexFile load(File source, File output) throws IOException {
-                                return DexFile.loadDex(source.getAbsolutePath(), output.getAbsolutePath(), 0);
+                            public DexFile load(String sourcePathName, String outputPathName) throws IOException {
+                                return DexFile.loadDex(sourcePathName, outputPathName, 0);
                             }
                         }));
         return new MockClassGeneratorCache(
