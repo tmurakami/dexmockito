@@ -1,6 +1,4 @@
-package org.mockito.internal.creation.bytebuddy;
-
-import com.github.tmurakami.dexmockito.ClassLoaderResolver;
+package com.github.tmurakami.dexmockito;
 
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 
@@ -10,7 +8,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.internal.creation.bytebuddy.ByteBuddyCrossClassLoaderSerializationSupport.CrossClassLoaderSerializableMock;
+import org.mockito.internal.creation.bytebuddy.ByteBuddyCrossClassLoaderSerializationSupport_CrossClassLoaderSerializableMock;
 import org.mockito.internal.creation.bytebuddy.MockMethodInterceptor.MockAccess;
 import org.mockito.mock.MockCreationSettings;
 
@@ -63,7 +61,7 @@ public class ByteBuddyMockClassGeneratorTest {
         assertTrue(I.class.isAssignableFrom(c));
         assertTrue(MockAccess.class.isAssignableFrom(c));
         assertEquals(classLoader, c.getClassLoader());
-        assertEquals(serializable, CrossClassLoaderSerializableMock.class.isAssignableFrom(c));
+        assertEquals(serializable, ByteBuddyCrossClassLoaderSerializationSupport_CrossClassLoaderSerializableMock.CLASS.isAssignableFrom(c));
         Annotation[] annotations = c.getDeclaredAnnotations();
         assertEquals(1, annotations.length);
         assertTrue(annotations[0] instanceof A);
