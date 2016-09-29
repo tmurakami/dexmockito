@@ -1,6 +1,5 @@
 package com.github.tmurakami.dexmockito;
 
-import org.mockito.internal.creation.bytebuddy.ByteBuddyMockClassGenerator;
 import org.mockito.mock.MockCreationSettings;
 
 import java.io.File;
