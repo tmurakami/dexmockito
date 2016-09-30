@@ -16,9 +16,6 @@ apply plugin: 'com.github.ben-manes.versions'
 group = 'com.github.tmurakami'
 version = '0.5.0-SNAPSHOT'
 
-def license = "$rootDir/LICENSE"
-def licensesOutputDir = "$buildDir/intermediates/licenses"
-
 android {
     compileSdkVersion 24
     buildToolsVersion '24.0.3'
@@ -27,7 +24,6 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
     }
-    sourceSets.main.assets.srcDir licensesOutputDir
     lintOptions.disable 'InvalidPackage'
     dexOptions.preDexLibraries !(System.getenv('CIRCLECI') as boolean)
 }
@@ -50,19 +46,12 @@ dependencies {
 
 task sourcesJar(type: Jar) {
     classifier = 'sources'
-    from license
-    from android.sourceSets.main.java.sourceFiles
-    from android.sourceSets.main.resources.sourceFiles
+    from android.sourceSets.main.java.srcDirs
+    from android.sourceSets.main.resources.srcDirs
 }
 
 artifacts {
     archives sourcesJar
-}
-
-task copyLicenses(type: Copy) {
-    from license
-    from "$rootDir/dx-NOTICE"
-    into licensesOutputDir
 }
 
 android.libraryVariants.all {
@@ -94,6 +83,5 @@ android.libraryVariants.all {
             }
         }
     }
-    mergeAssets.dependsOn(copyLicenses).inputs.dir licensesOutputDir
     mergedFlavor.testInstrumentationRunnerArguments.package = applicationId
 }
