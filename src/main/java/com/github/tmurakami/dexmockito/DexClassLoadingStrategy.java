@@ -25,19 +25,19 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
 
     private final File cacheDir;
     private final DexFileLoader dexFileLoader;
+    private final DexOptions dexOptions = new DexOptions();
+    private final CfOptions cfOptions = new CfOptions();
     private final RandomString randomString = new RandomString();
 
     DexClassLoadingStrategy(File cacheDir, DexFileLoader dexFileLoader) {
         this.cacheDir = cacheDir;
         this.dexFileLoader = dexFileLoader;
+        this.dexOptions.targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
     }
 
     @Override
     public Map<TypeDescription, Class<?>> load(ClassLoader classLoader,
                                                Map<TypeDescription, byte[]> types) {
-        DexOptions dexOptions = new DexOptions();
-        dexOptions.targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
-        CfOptions cfOptions = new CfOptions();
         DexFile dxDexFile = new DexFile(dexOptions);
         for (Map.Entry<TypeDescription, byte[]> e : types.entrySet()) {
             String path = e.getKey().getName().replace('.', '/') + ".class";

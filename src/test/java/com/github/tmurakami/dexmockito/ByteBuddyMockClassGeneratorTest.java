@@ -9,19 +9,20 @@ import org.junit.runners.Parameterized;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.internal.creation.bytebuddy.ByteBuddyCrossClassLoaderSerializationSupport_CrossClassLoaderSerializableMock;
-import org.mockito.internal.creation.bytebuddy.MockMethodInterceptor.MockAccess;
+import org.mockito.internal.creation.bytebuddy.MockAccess;
 import org.mockito.mock.MockCreationSettings;
+import org.mockito.mock.SerializableMode;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.mock.SerializableMode.ACROSS_CLASSLOADERS;
 
 @RunWith(Parameterized.class)
 public class ByteBuddyMockClassGeneratorTest {
@@ -31,11 +32,11 @@ public class ByteBuddyMockClassGeneratorTest {
     @Mock
     ClassLoaderResolver classLoaderResolver;
 
-    private final boolean serializable;
+    private final SerializableMode serializableMode;
     private ByteBuddyMockClassGenerator target;
 
-    public ByteBuddyMockClassGeneratorTest(boolean serializable) {
-        this.serializable = serializable;
+    public ByteBuddyMockClassGeneratorTest(SerializableMode serializableMode) {
+        this.serializableMode = serializableMode;
     }
 
     @Before
@@ -45,8 +46,8 @@ public class ByteBuddyMockClassGeneratorTest {
     }
 
     @Parameterized.Parameters(name = "serializable={0}")
-    public static Iterable<Boolean> parameters() {
-        return Arrays.asList(false, true);
+    public static SerializableMode[] parameters() {
+        return SerializableMode.values();
     }
 
     @Test
@@ -55,13 +56,13 @@ public class ByteBuddyMockClassGeneratorTest {
         given(classLoaderResolver.resolve(settings)).willReturn(classLoader);
         given(settings.getTypeToMock()).willReturn(C.class);
         given(settings.getExtraInterfaces()).willReturn(Collections.<Class<?>>singleton(I.class));
-        given(settings.isSerializable()).willReturn(serializable);
+        given(settings.getSerializableMode()).willReturn(serializableMode);
         Class<?> c = target.generate(settings);
         assertTrue(C.class.isAssignableFrom(c));
         assertTrue(I.class.isAssignableFrom(c));
         assertTrue(MockAccess.class.isAssignableFrom(c));
         assertEquals(classLoader, c.getClassLoader());
-        assertEquals(serializable, ByteBuddyCrossClassLoaderSerializationSupport_CrossClassLoaderSerializableMock.CLASS.isAssignableFrom(c));
+        assertEquals(serializableMode == ACROSS_CLASSLOADERS, ByteBuddyCrossClassLoaderSerializationSupport_CrossClassLoaderSerializableMock.CLASS.isAssignableFrom(c));
         Annotation[] annotations = c.getDeclaredAnnotations();
         assertEquals(1, annotations.length);
         assertTrue(annotations[0] instanceof A);
