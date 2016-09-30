@@ -1,9 +1,10 @@
 package com.github.tmurakami.dexmockito;
 
-import com.android.dx.dex.DexFormat;
-import com.android.dx.dex.DexOptions;
-import com.android.dx.dex.cf.CfOptions;
-import com.android.dx.dex.cf.CfTranslator;
+import com.github.tmurakami.dexmockito.repackaged.com.android.dx.dex.DexFormat;
+import com.github.tmurakami.dexmockito.repackaged.com.android.dx.dex.DexOptions;
+import com.github.tmurakami.dexmockito.repackaged.com.android.dx.dex.cf.CfOptions;
+import com.github.tmurakami.dexmockito.repackaged.com.android.dx.dex.cf.CfTranslator;
+import com.github.tmurakami.dexmockito.repackaged.com.android.dx.dex.file.DexFile;
 
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
@@ -19,8 +20,6 @@ import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.logging.Logger;
-
-import dalvik.system.DexFile;
 
 final class DexClassLoadingStrategy implements ClassLoadingStrategy {
 
@@ -39,7 +38,7 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
         DexOptions dexOptions = new DexOptions();
         dexOptions.targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
         CfOptions cfOptions = new CfOptions();
-        com.android.dx.dex.file.DexFile dxDexFile = new com.android.dx.dex.file.DexFile(dexOptions);
+        DexFile dxDexFile = new DexFile(dexOptions);
         for (Map.Entry<TypeDescription, byte[]> e : types.entrySet()) {
             String path = e.getKey().getName().replace('.', '/') + ".class";
             dxDexFile.add(CfTranslator.translate(path, e.getValue(), cfOptions, dexOptions));
@@ -48,7 +47,7 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
         File[] files = new File[2];
         files[0] = new File(cacheDir, fileName + ".jar");
         files[1] = new File(cacheDir, fileName + ".dex");
-        DexFile dexFile = null;
+        dalvik.system.DexFile dexFile = null;
         try {
             JarOutputStream out = new JarOutputStream(new FileOutputStream(files[0]));
             try {
