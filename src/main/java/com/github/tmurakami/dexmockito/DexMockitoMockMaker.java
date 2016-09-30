@@ -1,7 +1,7 @@
 package com.github.tmurakami.dexmockito;
 
 import org.mockito.internal.configuration.plugins.Plugins;
-import org.mockito.internal.creation.bytebuddy.ByteBuddyMockMaker;
+import org.mockito.internal.creation.bytebuddy.SubclassByteBuddyMockMaker;
 import org.mockito.internal.creation.instance.Instantiator;
 import org.mockito.invocation.MockHandler;
 import org.mockito.mock.MockCreationSettings;
@@ -14,7 +14,7 @@ public final class DexMockitoMockMaker implements MockMaker {
     private final MockClassGenerator mockClassGenerator;
 
     public DexMockitoMockMaker() {
-        this(new ObjenesisStd(false).newInstance(ByteBuddyMockMaker.class), DefaultMockClassGeneratorFactory.INSTANCE.create());
+        this(new ObjenesisStd(false).newInstance(SubclassByteBuddyMockMaker.class), DefaultMockClassGeneratorFactory.INSTANCE.create());
     }
 
     private DexMockitoMockMaker(MockMaker delegate, MockClassGenerator mockClassGenerator) {
