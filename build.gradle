@@ -14,14 +14,14 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.github.ben-manes.versions'
 
 group = 'com.github.tmurakami'
-version = '0.5.0'
+version = '0.5.1-SNAPSHOT'
 
 def packageName = "$group.$name" as String
 def repackagedJarName = 'repackaged.jar'
 
 android {
     compileSdkVersion 24
-    buildToolsVersion '24.0.3'
+    buildToolsVersion '24.0.2'
     defaultConfig {
         minSdkVersion 5
         testInstrumentationRunnerArguments.package = packageName
