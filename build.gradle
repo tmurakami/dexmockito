@@ -14,7 +14,7 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.github.ben-manes.versions'
 
 group = 'com.github.tmurakami'
-version = '0.5.1'
+version = '0.6.0-SNAPSHOT'
 
 def packageName = "$group.$name" as String
 def repackagedJarName = 'repackaged.jar'
@@ -47,7 +47,7 @@ dependencies {
     jarjar 'com.googlecode.jarjar:jarjar:1.3'
     repackage 'com.google.android.tools:dx:1.7'
     compile files("$buildDir/libs/$repackagedJarName") { builtBy 'jarjar' }
-    compile 'org.mockito:mockito-core:2.1.0-RC.2'
+    compile('org.mockito:mockito-core:2.1.0-RC.2') { exclude module: 'byte-buddy-agent' }
     testCompile 'junit:junit:4.12'
 }
 
