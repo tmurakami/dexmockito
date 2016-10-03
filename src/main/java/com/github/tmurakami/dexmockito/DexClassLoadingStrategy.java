@@ -24,14 +24,14 @@ import java.util.logging.Logger;
 final class DexClassLoadingStrategy implements ClassLoadingStrategy {
 
     private final File cacheDir;
-    private final DexFileLoader dexFileLoader;
+    private final DexFileLoader fileLoader;
     private final DexOptions dexOptions = new DexOptions();
     private final CfOptions cfOptions = new CfOptions();
     private final RandomString randomString = new RandomString();
 
-    DexClassLoadingStrategy(File cacheDir, DexFileLoader dexFileLoader) {
+    DexClassLoadingStrategy(File cacheDir, DexFileLoader fileLoader) {
         this.cacheDir = cacheDir;
-        this.dexFileLoader = dexFileLoader;
+        this.fileLoader = fileLoader;
         this.dexOptions.targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
     }
 
@@ -56,7 +56,7 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
             } finally {
                 IOUtil.closeQuietly(out);
             }
-            dexFile = dexFileLoader.load(files[0].getCanonicalPath(), files[1].getCanonicalPath());
+            dexFile = fileLoader.load(files[0].getCanonicalPath(), files[1].getCanonicalPath());
             Map<TypeDescription, Class<?>> classMap = new HashMap<>();
             for (TypeDescription td : types.keySet()) {
                 String name = td.getName();

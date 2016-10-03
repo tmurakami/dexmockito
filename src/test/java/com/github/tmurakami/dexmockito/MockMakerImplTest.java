@@ -8,18 +8,26 @@ import org.mockito.invocation.MockHandler;
 import org.mockito.mock.MockCreationSettings;
 import org.mockito.plugins.MockMaker;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.objenesis.ObjenesisStd;
+
+import java.io.ObjectStreamClass;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willReturn;
+import static org.mockito.Mockito.spy;
 
 @RunWith(MockitoJUnitRunner.class)
-public class DexMockitoMockMakerTest {
+public class MockMakerImplTest {
 
     @Mock
     MockMaker delegate;
     @Mock
-    MockClassGenerator mockClassGenerator;
+    MockClassGenerator generator;
+    @Mock
+    FieldSetter objectStreamClassNameFieldSetter;
     @Mock
     MockCreationSettings<C> settings;
     @Mock
@@ -28,12 +36,12 @@ public class DexMockitoMockMakerTest {
     MockMaker.TypeMockability typeMockability;
 
     @InjectMocks
-    DexMockitoMockMaker target;
+    MockMakerImpl target;
 
     @Test
     public void testCreateMock() {
         Class<C> c = C.class;
-        given(mockClassGenerator.generate(settings)).willReturn(c);
+        given(generator.generateMockClass(settings)).willReturn(c);
         given(settings.getTypeToMock()).willReturn(c);
         C mock = target.createMock(settings, handler);
         then(delegate).should().resetMock(mock, handler, settings);
@@ -57,6 +65,15 @@ public class DexMockitoMockMakerTest {
     public void testIsTypeMockable() {
         given(delegate.isTypeMockable(C.class)).willReturn(typeMockability);
         assertEquals(typeMockability, target.isTypeMockable(C.class));
+    }
+
+    @Test
+    public void testResolveMockClass() throws IllegalAccessException {
+        given(generator.generateMockClass(settings)).willReturn(C.class);
+        ObjectStreamClass desc = spy(new ObjenesisStd(false).newInstance(ObjectStreamClass.class));
+        willReturn("a").given(desc).getName();
+        assertSame(C.class, target.resolveMockClass(desc, settings));
+        then(objectStreamClassNameFieldSetter).should().setField(desc, C.class.getName());
     }
 
     private static class C {

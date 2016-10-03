@@ -13,18 +13,18 @@ final class MockClassGeneratorCache implements MockClassGenerator {
 
     private final ConcurrentMap<Reference, MockClassGenerator> cache;
     private final ReferenceQueue<Object> queue;
-    private final MockClassGeneratorFactory mockClassGeneratorFactory;
+    private final MockClassGeneratorFactory generatorFactory;
 
     MockClassGeneratorCache(ConcurrentMap<Reference, MockClassGenerator> cache,
                             ReferenceQueue<Object> queue,
-                            MockClassGeneratorFactory mockClassGeneratorFactory) {
+                            MockClassGeneratorFactory generatorFactory) {
         this.cache = cache;
         this.queue = queue;
-        this.mockClassGeneratorFactory = mockClassGeneratorFactory;
+        this.generatorFactory = generatorFactory;
     }
 
     @Override
-    public Class generate(MockCreationSettings<?> settings) {
+    public Class generateMockClass(MockCreationSettings<?> settings) {
         for (Reference<?> r; (r = queue.poll()) != null; ) {
             cache.remove(r);
         }
@@ -32,12 +32,12 @@ final class MockClassGeneratorCache implements MockClassGenerator {
         Key key = new Key(loader == null ? NULL : loader, queue);
         MockClassGenerator generator = cache.get(key);
         if (generator == null) {
-            MockClassGenerator newGenerator = mockClassGeneratorFactory.create();
+            MockClassGenerator newGenerator = generatorFactory.newMockClassGenerator();
             if ((generator = cache.putIfAbsent(key, newGenerator)) == null) {
                 generator = newGenerator;
             }
         }
-        return generator.generate(settings);
+        return generator.generateMockClass(settings);
     }
 
     private static class Key extends WeakReference<Object> {

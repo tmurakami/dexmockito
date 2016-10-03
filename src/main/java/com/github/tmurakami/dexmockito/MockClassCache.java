@@ -11,15 +11,15 @@ import java.util.concurrent.FutureTask;
 
 final class MockClassCache implements MockClassGenerator {
 
-    private final FutureTaskFactory futureTaskFactory;
+    private final FutureTaskFactory taskFactory;
     private final ConcurrentMap<Integer, Future<Reference<Class>>> cache = new ConcurrentHashMap<>();
 
-    MockClassCache(FutureTaskFactory futureTaskFactory) {
-        this.futureTaskFactory = futureTaskFactory;
+    MockClassCache(FutureTaskFactory taskFactory) {
+        this.taskFactory = taskFactory;
     }
 
     @Override
-    public Class generate(MockCreationSettings<?> settings) {
+    public Class generateMockClass(MockCreationSettings<?> settings) {
         int hash = settings.getTypeToMock().hashCode();
         hash = 31 * hash + settings.getExtraInterfaces().hashCode();
         Integer key = hash;
@@ -33,7 +33,7 @@ final class MockClassCache implements MockClassGenerator {
                 }
             }
             if (task == null) {
-                task = futureTaskFactory.create(settings);
+                task = taskFactory.newFutureTask(settings);
             }
             if (future != null) {
                 if (!cache.replace(key, future, task)) {

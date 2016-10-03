@@ -37,9 +37,9 @@ public class DexClassLoadingStrategyTest {
     public final TemporaryFolder folder = new TemporaryFolder();
 
     @Mock
-    DexFileLoader dexFileLoader;
+    DexFileLoader fileLoader;
     @Mock
-    DexFile dexFile;
+    DexFile file;
 
     @Captor
     ArgumentCaptor<String> sourcePathNameCaptor;
@@ -52,7 +52,7 @@ public class DexClassLoadingStrategyTest {
     @Before
     public void setUp() throws IOException {
         cacheDir = folder.newFolder();
-        target = new DexClassLoadingStrategy(cacheDir, dexFileLoader);
+        target = new DexClassLoadingStrategy(cacheDir, fileLoader);
     }
 
     @Test
@@ -69,13 +69,13 @@ public class DexClassLoadingStrategyTest {
             bytecodeMap.put(td, bytecode);
             classMap.put(td, classLoader.defineClass(name, bytecode));
         }
-        given(dexFileLoader.load(anyString(), anyString())).willReturn(dexFile);
+        given(fileLoader.load(anyString(), anyString())).willReturn(file);
         assertEquals(classMap, target.load(classLoader, bytecodeMap));
         for (String name : names) {
-            then(dexFile).should().loadClass(name, classLoader);
+            then(file).should().loadClass(name, classLoader);
         }
-        then(dexFile).should().close();
-        then(dexFileLoader).should().load(sourcePathNameCaptor.capture(), outputPathNameCaptor.capture());
+        then(file).should().close();
+        then(fileLoader).should().load(sourcePathNameCaptor.capture(), outputPathNameCaptor.capture());
         File[] files = {new File(sourcePathNameCaptor.getValue()), new File(outputPathNameCaptor.getValue())};
         for (File f : files) {
             assertFalse(f.exists());

@@ -1,1 +1,1 @@
-com.github.tmurakami.dexmockito.DexMockitoStackTraceCleanerProvider
+com.github.tmurakami.dexmockito.StackTraceCleanerProviderImpl

@@ -11,10 +11,10 @@ final class CacheDir {
         throw new AssertionError("Do not instantiate");
     }
 
-    static File get(File root, ClassLoader classLoader) {
+    static File get(File root, ClassLoader loader) {
         File dataRoot = new File(root, "data/data");
         try {
-            Enumeration<URL> enu = classLoader.getResources("AndroidManifest.xml");
+            Enumeration<URL> enu = loader.getResources("AndroidManifest.xml");
             while (enu.hasMoreElements()) {
                 String path = enu.nextElement().getPath();
                 int hyphen = path.lastIndexOf('-');

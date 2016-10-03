@@ -9,12 +9,12 @@ import static org.mockito.Mockito.mock;
 public class CacheTest extends BaseAndroidTestCase {
 
     public void testCacheDirExists() {
-        File cache = new File(getContext().getCacheDir(), "dexmockito");
-        assertTrue(!cache.exists() || FileUtils.forceDelete(cache));
+        File cacheDir = new File(getContext().getCacheDir(), "dexmockito");
+        assertTrue(!cacheDir.exists() || FileUtils.forceDelete(cacheDir));
         mock(C.class);
-        assertTrue(cache.isDirectory());
-        assertTrue(cache.canRead());
-        assertTrue(cache.canWrite());
+        assertTrue(cacheDir.isDirectory());
+        assertTrue(cacheDir.canRead());
+        assertTrue(cacheDir.canWrite());
     }
 
     public void testMockClassCaching() {

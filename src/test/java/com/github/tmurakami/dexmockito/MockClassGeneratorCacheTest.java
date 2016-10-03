@@ -27,9 +27,9 @@ import static org.mockito.BDDMockito.given;
 public class MockClassGeneratorCacheTest {
 
     @Mock
-    MockClassGeneratorFactory mockClassGeneratorFactory;
+    MockClassGeneratorFactory generatorFactory;
     @Mock
-    MockClassGenerator mockClassGenerator;
+    MockClassGenerator generator;
     @Mock
     MockCreationSettings<C> settings;
 
@@ -39,21 +39,21 @@ public class MockClassGeneratorCacheTest {
 
     @Before
     public void setUp() {
-        target = new MockClassGeneratorCache(cache, queue, mockClassGeneratorFactory);
+        target = new MockClassGeneratorCache(cache, queue, generatorFactory);
     }
 
     @Test
-    public void testGenerate() throws Exception {
+    public void testGenerateMockClass() throws Exception {
         int count = 5;
         for (int i = 0; i < 5; i++) {
             Class<C> c = redefineClass(C.class);
-            given(mockClassGenerator.generate(any(MockCreationSettings.class))).willReturn(c);
-            given(mockClassGeneratorFactory.create()).willReturn(mockClassGenerator);
+            given(generator.generateMockClass(any(MockCreationSettings.class))).willReturn(c);
+            given(generatorFactory.newMockClassGenerator()).willReturn(generator);
             given(settings.getTypeToMock()).willReturn(c);
-            target.generate(settings);
+            target.generateMockClass(settings);
         }
         assertEquals(count, cache.size());
-        Mockito.reset(mockClassGeneratorFactory, mockClassGenerator, settings);
+        Mockito.reset(generatorFactory, generator, settings);
         System.gc();
         Thread.sleep(500);
         for (Reference<?> r; (r = queue.poll()) != null; ) {
