@@ -26,7 +26,7 @@ public class ClassLoaderTest extends BaseAndroidTestCase {
     @Mock
     TypeDescription typeDescription;
     @Mock
-    DexFileLoader dexFileLoader;
+    DexFileLoader fileLoader;
 
     @Override
     protected void setUp() throws Exception {
@@ -35,9 +35,10 @@ public class ClassLoaderTest extends BaseAndroidTestCase {
     }
 
     public void testLoadByCustomClassLoader() throws IOException {
-        String name = getClass().getName() + "$C";
+        Class<?> thisClass = getClass();
+        String name = thisClass.getName() + "$C";
         given(typeDescription.getName()).willReturn(name);
-        given(dexFileLoader.load(anyString(), anyString())).will(new Answer<DexFile>() {
+        given(fileLoader.load(anyString(), anyString())).will(new Answer<DexFile>() {
             @Override
             public DexFile answer(InvocationOnMock invocation) throws Throwable {
                 String sourcePathName = invocation.getArgument(0);
@@ -47,13 +48,13 @@ public class ClassLoaderTest extends BaseAndroidTestCase {
         });
         Map<TypeDescription, byte[]> bytecodeMap = new HashMap<>();
         bytecodeMap.put(typeDescription, generateBytecode(name));
-        File cacheDir = new File(getContext().getCacheDir(), getClass().getSimpleName().toLowerCase(Locale.US));
+        File cacheDir = new File(getContext().getCacheDir(), thisClass.getSimpleName().toLowerCase(Locale.US));
         ClassLoader loader = new ClassLoader() {
         };
         Map<TypeDescription, Class<?>> classMap;
         try {
             assertTrue(cacheDir.mkdir());
-            classMap = new DexClassLoadingStrategy(cacheDir, dexFileLoader).load(loader, bytecodeMap);
+            classMap = new DexClassLoadingStrategy(cacheDir, fileLoader).load(loader, bytecodeMap);
         } finally {
             assertTrue(FileUtils.forceDelete(cacheDir));
         }

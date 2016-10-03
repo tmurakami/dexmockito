@@ -28,9 +28,9 @@ import static org.mockito.Mockito.times;
 public class MockClassCacheTest {
 
     @Mock
-    FutureTaskFactory futureTaskFactory;
+    FutureTaskFactory taskFactory;
     @Mock
-    FutureTask<Reference<Class>> futureTask;
+    FutureTask<Reference<Class>> task;
     @Mock
     Reference<Class> reference;
     @Mock
@@ -40,14 +40,14 @@ public class MockClassCacheTest {
     MockClassCache target;
 
     @Test
-    public void testGenerate() throws Throwable {
+    public void testGenerateMockClass() throws Throwable {
         Class[] classes = {null, C.class};
         BDDMockito.BDDMyOngoingStubbing<Class> stubbing = given(reference.get());
         for (Class<?> c : classes) {
             stubbing = stubbing.willReturn(c);
         }
-        given(futureTask.get()).willReturn(reference);
-        given(futureTaskFactory.create(settings)).willReturn(futureTask);
+        given(task.get()).willReturn(reference);
+        given(taskFactory.newFutureTask(settings)).willReturn(task);
         given(settings.getTypeToMock()).willReturn(C.class);
         int count = 10;
         List<Callable<Class<?>>> tasks = new ArrayList<>(count);
@@ -56,7 +56,7 @@ public class MockClassCacheTest {
             tasks.add(new Callable<Class<?>>() {
                 @Override
                 public Class<?> call() throws Exception {
-                    return target.generate(settings);
+                    return target.generateMockClass(settings);
                 }
             });
         }
@@ -68,7 +68,7 @@ public class MockClassCacheTest {
                 throw e.getCause();
             }
         }
-        then(futureTask).should(times(classes.length)).run();
+        then(task).should(times(classes.length)).run();
         assertEquals(1, result.size());
         assertEquals(C.class, result.iterator().next());
     }

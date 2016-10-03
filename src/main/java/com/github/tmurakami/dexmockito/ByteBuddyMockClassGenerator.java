@@ -7,13 +7,11 @@ import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.dynamic.scaffold.TypeValidation;
 
-import org.mockito.internal.creation.bytebuddy.ByteBuddyCrossClassLoaderSerializationSupport_CrossClassLoaderSerializableMock;
 import org.mockito.internal.creation.bytebuddy.MockAccess;
 import org.mockito.internal.creation.bytebuddy.MockMethodInterceptor;
 import org.mockito.internal.creation.bytebuddy.MockMethodInterceptor.DispatcherDefaultingToRealMethod;
 import org.mockito.internal.creation.bytebuddy.MockMethodInterceptor.ForEquals;
 import org.mockito.internal.creation.bytebuddy.MockMethodInterceptor.ForHashCode;
-import org.mockito.internal.creation.bytebuddy.MockMethodInterceptor.ForWriteReplace;
 import org.mockito.mock.MockCreationSettings;
 import org.mockito.mock.SerializableMode;
 
@@ -23,9 +21,11 @@ import java.util.Set;
 import static net.bytebuddy.NamingStrategy.SuffixingRandom.BaseNameResolver.ForUnnamedType;
 import static net.bytebuddy.description.modifier.SynchronizationState.PLAIN;
 import static net.bytebuddy.description.modifier.Visibility.PRIVATE;
+import static net.bytebuddy.description.modifier.Visibility.PUBLIC;
 import static net.bytebuddy.dynamic.Transformer.ForMethod.withModifiers;
 import static net.bytebuddy.implementation.FieldAccessor.ofBeanProperty;
 import static net.bytebuddy.implementation.MethodDelegation.to;
+import static net.bytebuddy.implementation.MethodDelegation.toConstructor;
 import static net.bytebuddy.implementation.attribute.MethodAttributeAppender.ForInstrumentedMethod.INCLUDING_RECEIVER;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
@@ -35,21 +35,20 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 final class ByteBuddyMockClassGenerator implements MockClassGenerator {
 
-    private final ClassLoaderResolver classLoaderResolver;
-    private final ClassLoadingStrategy classLoadingStrategy;
+    private final ClassLoaderResolver resolver;
+    private final ClassLoadingStrategy strategy;
     private final ByteBuddy byteBuddy = new ByteBuddy()
             .with(ClassFileVersion.JAVA_V6)
             .with(TypeValidation.DISABLED)
             .with(new SuffixingRandom("MockitoMock", ForUnnamedType.INSTANCE, "codegen"));
 
-    ByteBuddyMockClassGenerator(ClassLoaderResolver classLoaderResolver,
-                                ClassLoadingStrategy classLoadingStrategy) {
-        this.classLoaderResolver = classLoaderResolver;
-        this.classLoadingStrategy = classLoadingStrategy;
+    ByteBuddyMockClassGenerator(ClassLoaderResolver resolver, ClassLoadingStrategy strategy) {
+        this.resolver = resolver;
+        this.strategy = strategy;
     }
 
     @Override
-    public Class generate(MockCreationSettings<?> settings) {
+    public Class generateMockClass(MockCreationSettings<?> settings) {
         Class<?> typeToMock = settings.getTypeToMock();
         Set<Class<?>> extraInterfaces = settings.getExtraInterfaces();
         DynamicType.Builder<?> builder = byteBuddy
@@ -63,9 +62,9 @@ final class ByteBuddyMockClassGenerator implements MockClassGenerator {
                 .method(isHashCode()).intercept(to(ForHashCode.class))
                 .method(isEquals()).intercept(to(ForEquals.class));
         if (settings.getSerializableMode() == SerializableMode.ACROSS_CLASSLOADERS) {
-            builder = builder.implement(ByteBuddyCrossClassLoaderSerializationSupport_CrossClassLoaderSerializableMock.CLASS).intercept(to(ForWriteReplace.class));
+            builder = builder.defineMethod("writeReplace", Object.class, PUBLIC).intercept(toConstructor(SerializableMockProxy.class));
         }
-        return builder.make().load(classLoaderResolver.resolve(settings), classLoadingStrategy).getLoaded();
+        return builder.make().load(resolver.resolveClassLoader(settings), strategy).getLoaded();
     }
 
 }

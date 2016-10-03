@@ -6,5 +6,5 @@ import java.lang.ref.Reference;
 import java.util.concurrent.FutureTask;
 
 interface FutureTaskFactory {
-    FutureTask<Reference<Class>> create(MockCreationSettings<?> settings);
+    FutureTask<Reference<Class>> newFutureTask(MockCreationSettings<?> settings);
 }

@@ -26,7 +26,7 @@ public class CacheDirTest {
     public final TemporaryFolder folder = new TemporaryFolder();
 
     @Mock
-    ClassLoader classLoader;
+    ClassLoader loader;
     @Mock
     Enumeration<URL> resources;
 
@@ -51,13 +51,13 @@ public class CacheDirTest {
 
     @Test
     public void testGet() throws IOException {
-        given(classLoader.getResources("AndroidManifest.xml")).willReturn(resources);
+        given(loader.getResources("AndroidManifest.xml")).willReturn(resources);
         given(resources.hasMoreElements()).willReturn(true, false);
         URL url = new URL("jar:file:" + apkPath + "!/AndroidManifest.xml");
         given(resources.nextElement()).willReturn(url).willThrow(new NoSuchElementException());
         folder.newFolder("data", "data", "a.b.c");
         File root = folder.getRoot();
-        assertEquals(new File(root, "data/data/a.b.c/cache/dexmockito"), CacheDir.get(root, classLoader));
+        assertEquals(new File(root, "data/data/a.b.c/cache/dexmockito"), CacheDir.get(root, loader));
     }
 
 }
