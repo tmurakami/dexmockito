@@ -44,19 +44,19 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
             dxDexFile.add(CfTranslator.translate(path, e.getValue(), cfOptions, dexOptions));
         }
         String fileName = randomString.nextString();
-        File[] files = new File[2];
-        files[0] = new File(cacheDir, fileName + ".jar");
-        files[1] = new File(cacheDir, fileName + ".dex");
+        File jar = new File(cacheDir, fileName + ".jar");
+        File dex = new File(cacheDir, fileName + ".dex");
         dalvik.system.DexFile dexFile = null;
         try {
-            JarOutputStream out = new JarOutputStream(new FileOutputStream(files[0]));
+            JarOutputStream out = new JarOutputStream(new FileOutputStream(jar));
             try {
                 out.putNextEntry(new JarEntry("classes.dex"));
                 dxDexFile.writeTo(out, null, false);
+                out.closeEntry();
             } finally {
                 IOUtil.closeQuietly(out);
             }
-            dexFile = fileLoader.load(files[0].getCanonicalPath(), files[1].getCanonicalPath());
+            dexFile = fileLoader.load(jar.getCanonicalPath(), dex.getCanonicalPath());
             Map<TypeDescription, Class<?>> classMap = new HashMap<>();
             for (TypeDescription td : types.keySet()) {
                 String name = td.getName();
@@ -67,16 +67,24 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         } finally {
-            if (dexFile != null) {
-                try {
-                    dexFile.close();
-                } catch (IOException ignored) {
-                }
+            closeQuietly(dexFile);
+            deleteFiles(jar, dex);
+        }
+    }
+
+    private static void closeQuietly(dalvik.system.DexFile dexFile) {
+        if (dexFile != null) {
+            try {
+                dexFile.close();
+            } catch (IOException ignored) {
             }
-            for (File f : files) {
-                if (f.exists() && !f.delete()) {
-                    Logger.getLogger("com.github.tmurakami.dexmockito").warning("Cannot delete " + f);
-                }
+        }
+    }
+
+    private static void deleteFiles(File... files) {
+        for (File f : files) {
+            if (f.exists() && !f.delete()) {
+                Logger.getLogger("com.github.tmurakami.dexmockito").warning("Cannot delete " + f);
             }
         }
     }

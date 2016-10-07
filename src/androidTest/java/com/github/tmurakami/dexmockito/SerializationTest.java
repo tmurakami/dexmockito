@@ -26,7 +26,7 @@ public class SerializationTest extends BaseAndroidTestCase {
     }
 
     private static byte[] serialize(Object o) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(8192);
         ObjectOutputStream oos = new ObjectOutputStream(baos);
         try {
             oos.writeObject(o);

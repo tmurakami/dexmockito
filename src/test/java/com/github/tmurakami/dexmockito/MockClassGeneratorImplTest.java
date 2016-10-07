@@ -25,7 +25,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.mock.SerializableMode.ACROSS_CLASSLOADERS;
 
 @RunWith(Parameterized.class)
-public class ByteBuddyMockClassGeneratorTest {
+public class MockClassGeneratorImplTest {
 
     @Mock
     MockCreationSettings<C> settings;
@@ -33,16 +33,16 @@ public class ByteBuddyMockClassGeneratorTest {
     ClassLoaderResolver resolver;
 
     private final SerializableMode serializableMode;
-    private ByteBuddyMockClassGenerator target;
+    private MockClassGeneratorImpl target;
 
-    public ByteBuddyMockClassGeneratorTest(SerializableMode serializableMode) {
+    public MockClassGeneratorImplTest(SerializableMode serializableMode) {
         this.serializableMode = serializableMode;
     }
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        target = new ByteBuddyMockClassGenerator(resolver, ClassLoadingStrategy.Default.INJECTION);
+        target = new MockClassGeneratorImpl(resolver, ClassLoadingStrategy.Default.INJECTION);
     }
 
     @Parameterized.Parameters(name = "serializable={0}")
@@ -76,7 +76,7 @@ public class ByteBuddyMockClassGeneratorTest {
 
     private static boolean hasWriteReplaceMethod(Class<?> c) {
         try {
-            return Modifier.isPublic(c.getDeclaredMethod("writeReplace").getModifiers());
+            return Modifier.isPrivate(c.getDeclaredMethod("writeReplace").getModifiers());
         } catch (NoSuchMethodException e) {
             return false;
         }

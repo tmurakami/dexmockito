@@ -95,8 +95,7 @@ public final class MockMakerImpl implements MockMaker, MockClassResolver {
 
     private static MockClassGenerator newMockClassGenerator() {
         final ClassLoader classLoader = MockMakerImpl.class.getClassLoader();
-        File cacheDir = CacheDir.get(new File("/"), classLoader);
-        final MockClassGenerator mockClassGenerator1 = new ByteBuddyMockClassGenerator(
+        final MockClassGenerator generator = new MockClassGeneratorImpl(
                 new ClassLoaderResolver() {
                     @Override
                     public ClassLoader resolveClassLoader(MockCreationSettings<?> settings) {
@@ -105,7 +104,7 @@ public final class MockMakerImpl implements MockMaker, MockClassResolver {
                     }
                 },
                 new DexClassLoadingStrategy(
-                        cacheDir,
+                        CacheDir.get(new File("/"), classLoader),
                         new DexFileLoader() {
                             @Override
                             public DexFile load(String sourcePathName, String outputPathName) throws IOException {
@@ -124,7 +123,7 @@ public final class MockMakerImpl implements MockMaker, MockClassResolver {
                                 return new FutureTask<>(new Callable<Reference<Class>>() {
                                     @Override
                                     public Reference<Class> call() throws Exception {
-                                        return new WeakReference<>(mockClassGenerator1.generateMockClass(settings));
+                                        return new WeakReference<>(generator.generateMockClass(settings));
                                     }
                                 });
                             }

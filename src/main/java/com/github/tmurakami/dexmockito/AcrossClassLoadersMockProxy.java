@@ -1,7 +1,6 @@
 package com.github.tmurakami.dexmockito;
 
 import net.bytebuddy.implementation.bind.annotation.This;
-import net.bytebuddy.utility.StreamDrainer;
 
 import org.mockito.internal.configuration.plugins.Plugins;
 import org.mockito.internal.creation.settings.CreationSettings;
@@ -10,8 +9,6 @@ import org.mockito.internal.util.io.IOUtil;
 import org.mockito.mock.MockCreationSettings;
 import org.mockito.mock.SerializableMode;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -22,13 +19,13 @@ import java.io.Serializable;
 import java.util.Set;
 
 @SuppressWarnings("WeakerAccess")
-public final class SerializableMockProxy implements Serializable {
+public final class AcrossClassLoadersMockProxy implements Serializable {
 
     private static final long serialVersionUID = -854526631339770616L;
 
     transient Object mock;
 
-    public SerializableMockProxy(@This Object mock) {
+    public AcrossClassLoadersMockProxy(@This Object mock) {
         this.mock = mock;
     }
 
@@ -45,8 +42,7 @@ public final class SerializableMockProxy implements Serializable {
                 .setTypeToMock((Class<?>) in.readObject())
                 .setExtraInterfaces((Set<Class<?>>) in.readObject())
                 .setSerializableMode(SerializableMode.ACROSS_CLASSLOADERS);
-        InputStream bais = new ByteArrayInputStream(StreamDrainer.DEFAULT.drain(in));
-        ObjectInputStream ois = new InternalObjectInputStream(bais, resolver, name, settings);
+        ObjectInputStream ois = new InternalObjectInputStream(in, resolver, name, settings);
         try {
             mock = ois.readObject();
         } finally {
@@ -60,14 +56,12 @@ public final class SerializableMockProxy implements Serializable {
         MockCreationSettings<?> settings = MockUtil.getMockSettings(mock);
         out.writeObject(settings.getTypeToMock());
         out.writeObject(settings.getExtraInterfaces());
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new InternalObjectOutputStream(baos);
+        ObjectOutputStream oos = new InternalObjectOutputStream(out);
         try {
             oos.writeObject(mock);
         } finally {
             IOUtil.closeQuietly(oos);
         }
-        out.write(baos.toByteArray());
     }
 
     private static class InternalObjectOutputStream extends ObjectOutputStream {
@@ -78,8 +72,12 @@ public final class SerializableMockProxy implements Serializable {
         }
 
         @Override
-        protected Object replaceObject(Object o) throws IOException {
-            return o instanceof SerializableMockProxy ? ((SerializableMockProxy) o).mock : super.replaceObject(o);
+        protected Object replaceObject(Object obj) throws IOException {
+            if (obj instanceof AcrossClassLoadersMockProxy) {
+                return ((AcrossClassLoadersMockProxy) obj).mock;
+            } else {
+                return super.replaceObject(obj);
+            }
         }
 
     }
@@ -102,7 +100,11 @@ public final class SerializableMockProxy implements Serializable {
 
         @Override
         protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
-            return desc.getName().equals(name) ? resolver.resolveMockClass(desc, settings) : super.resolveClass(desc);
+            if (desc.getName().equals(name)) {
+                return resolver.resolveMockClass(desc, settings);
+            } else {
+                return super.resolveClass(desc);
+            }
         }
 
     }
