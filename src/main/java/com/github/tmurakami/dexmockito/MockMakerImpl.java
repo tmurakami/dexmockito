@@ -104,7 +104,7 @@ public final class MockMakerImpl implements MockMaker, MockClassResolver {
                     }
                 },
                 new DexClassLoadingStrategy(
-                        CacheDir.get(new File("/"), classLoader),
+                        getCacheDir(classLoader),
                         new DexFileLoader() {
                             @Override
                             public DexFile load(String sourcePathName, String outputPathName) throws IOException {
@@ -130,6 +130,11 @@ public final class MockMakerImpl implements MockMaker, MockClassResolver {
                         });
                     }
                 });
+    }
+
+    private static File getCacheDir(ClassLoader classLoader) {
+        String property = System.getProperty("dexmaker.dexcache");
+        return property == null ? CacheDir.get(new File("/"), classLoader) : new File(property);
     }
 
 }
