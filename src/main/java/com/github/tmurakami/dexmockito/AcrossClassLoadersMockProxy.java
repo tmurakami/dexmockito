@@ -35,14 +35,14 @@ public final class AcrossClassLoadersMockProxy implements Serializable {
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        MockClassResolver resolver = (MockClassResolver) Plugins.getMockMaker();
+        DexMockitoMockMaker mockMaker = (DexMockitoMockMaker) Plugins.getMockMaker();
         String name = (String) in.readObject();
         @SuppressWarnings("unchecked")
         MockCreationSettings<?> settings = new CreationSettings()
                 .setTypeToMock((Class<?>) in.readObject())
                 .setExtraInterfaces((Set<Class<?>>) in.readObject())
                 .setSerializableMode(SerializableMode.ACROSS_CLASSLOADERS);
-        ObjectInputStream ois = new InternalObjectInputStream(in, resolver, name, settings);
+        ObjectInputStream ois = new InternalObjectInputStream(in, mockMaker, name, settings);
         try {
             mock = ois.readObject();
         } finally {
@@ -84,16 +84,16 @@ public final class AcrossClassLoadersMockProxy implements Serializable {
 
     private static class InternalObjectInputStream extends ObjectInputStream {
 
-        private final MockClassResolver resolver;
+        private final DexMockitoMockMaker mockMaker;
         private final String name;
         private final MockCreationSettings<?> settings;
 
         InternalObjectInputStream(InputStream in,
-                                  MockClassResolver resolver,
+                                  DexMockitoMockMaker mockMaker,
                                   String name,
                                   MockCreationSettings<?> settings) throws IOException {
             super(in);
-            this.resolver = resolver;
+            this.mockMaker = mockMaker;
             this.name = name;
             this.settings = settings;
         }
@@ -101,7 +101,7 @@ public final class AcrossClassLoadersMockProxy implements Serializable {
         @Override
         protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
             if (desc.getName().equals(name)) {
-                return resolver.resolveMockClass(desc, settings);
+                return mockMaker.resolveMockClass(desc, settings);
             } else {
                 return super.resolveClass(desc);
             }

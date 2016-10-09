@@ -1,7 +1,5 @@
 package com.github.tmurakami.dexmockito;
 
-import android.os.Build;
-
 import org.mockito.internal.configuration.plugins.Plugins;
 import org.mockito.internal.creation.bytebuddy.SubclassByteBuddyMockMaker;
 import org.mockito.internal.creation.instance.Instantiator;
@@ -16,27 +14,24 @@ import java.io.ObjectStreamClass;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.FutureTask;
 
 import dalvik.system.DexFile;
 
-public final class MockMakerImpl implements MockMaker, MockClassResolver {
+public final class DexMockitoMockMaker implements MockMaker {
 
     private final MockMaker delegate;
-    private final MockClassGenerator generator;
-    private final FieldSetter objectStreamClassNameFieldSetter;
+    private final DexMockitoMockMakerHelper helper;
 
-    public MockMakerImpl() {
-        this(new ObjenesisStd(false).newInstance(SubclassByteBuddyMockMaker.class), newMockClassGenerator(), getObjectStreamClassNameFieldSetter());
+    public DexMockitoMockMaker() {
+        this(new ObjenesisStd(false).newInstance(SubclassByteBuddyMockMaker.class), newMockMakerHelper());
     }
 
-    private MockMakerImpl(MockMaker delegate, MockClassGenerator generator, FieldSetter objectStreamClassNameFieldSetter) {
+    private DexMockitoMockMaker(MockMaker delegate, DexMockitoMockMakerHelper helper) {
         this.delegate = delegate;
-        this.generator = generator;
-        this.objectStreamClassNameFieldSetter = objectStreamClassNameFieldSetter;
+        this.helper = helper;
     }
 
     @Override
@@ -63,38 +58,21 @@ public final class MockMakerImpl implements MockMaker, MockClassResolver {
         return delegate.isTypeMockable(type);
     }
 
-    @Override
-    public Class resolveMockClass(ObjectStreamClass desc, MockCreationSettings<?> settings) {
-        Class<?> c = generateMockClass(settings);
+    Class<?> resolveMockClass(ObjectStreamClass desc, MockCreationSettings<?> settings) {
+        Class<?> c = helper.generateMockClass(settings);
         String name = c.getName();
         if (!name.equals(desc.getName())) {
-            objectStreamClassNameFieldSetter.setField(desc, name);
+            helper.setName(desc, name);
         }
         return c;
     }
 
-    private Class<?> generateMockClass(MockCreationSettings<?> settings) {
-        return generator.generateMockClass(settings);
+    private <T> Class generateMockClass(MockCreationSettings<T> settings) {
+        return helper.generateMockClass(settings);
     }
 
-    private static FieldSetter getObjectStreamClassNameFieldSetter() {
-        String name = Build.VERSION.SDK_INT < Build.VERSION_CODES.N ? "className" : "name";
-        final Field f;
-        try {
-            f = ObjectStreamClass.class.getDeclaredField(name);
-        } catch (NoSuchFieldException e) {
-            throw new RuntimeException(e);
-        }
-        return new FieldSetter() {
-            @Override
-            public void setField(Object instance, Object value) {
-                org.mockito.internal.util.reflection.FieldSetter.setField(instance, f, value);
-            }
-        };
-    }
-
-    private static MockClassGenerator newMockClassGenerator() {
-        final ClassLoader classLoader = MockMakerImpl.class.getClassLoader();
+    private static DexMockitoMockMakerHelper newMockMakerHelper() {
+        final ClassLoader classLoader = DexMockitoMockMaker.class.getClassLoader();
         final MockClassGenerator generator = new MockClassGeneratorImpl(
                 new ClassLoaderResolver() {
                     @Override
@@ -111,7 +89,7 @@ public final class MockMakerImpl implements MockMaker, MockClassResolver {
                                 return DexFile.loadDex(sourcePathName, outputPathName, 0);
                             }
                         }));
-        return new MockClassGeneratorCache(
+        return new DexMockitoMockMakerHelperImpl(new MockClassGeneratorCache(
                 new ConcurrentHashMap<Reference, MockClassGenerator>(),
                 new ReferenceQueue<>(),
                 new MockClassGeneratorFactory() {
@@ -129,7 +107,7 @@ public final class MockMakerImpl implements MockMaker, MockClassResolver {
                             }
                         });
                     }
-                });
+                }));
     }
 
     private static File getCacheDir(ClassLoader classLoader) {

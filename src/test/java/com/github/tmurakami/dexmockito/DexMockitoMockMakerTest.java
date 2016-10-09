@@ -20,14 +20,12 @@ import static org.mockito.BDDMockito.willReturn;
 import static org.mockito.Mockito.spy;
 
 @RunWith(MockitoJUnitRunner.class)
-public class MockMakerImplTest {
+public class DexMockitoMockMakerTest {
 
     @Mock
     MockMaker delegate;
     @Mock
-    MockClassGenerator generator;
-    @Mock
-    FieldSetter objectStreamClassNameFieldSetter;
+    DexMockitoMockMakerHelper helper;
     @Mock
     MockCreationSettings<C> settings;
     @Mock
@@ -36,12 +34,12 @@ public class MockMakerImplTest {
     MockMaker.TypeMockability typeMockability;
 
     @InjectMocks
-    MockMakerImpl target;
+    DexMockitoMockMaker target;
 
     @Test
     public void testCreateMock() {
         Class<C> c = C.class;
-        given(generator.generateMockClass(settings)).willReturn(c);
+        given(helper.generateMockClass(settings)).willReturn(c);
         given(settings.getTypeToMock()).willReturn(c);
         C mock = target.createMock(settings, handler);
         then(delegate).should().resetMock(mock, handler, settings);
@@ -69,11 +67,11 @@ public class MockMakerImplTest {
 
     @Test
     public void testResolveMockClass() throws IllegalAccessException {
-        given(generator.generateMockClass(settings)).willReturn(C.class);
+        given(helper.generateMockClass(settings)).willReturn(C.class);
         ObjectStreamClass desc = spy(new ObjenesisStd(false).newInstance(ObjectStreamClass.class));
         willReturn("a").given(desc).getName();
         assertSame(C.class, target.resolveMockClass(desc, settings));
-        then(objectStreamClassNameFieldSetter).should().setField(desc, C.class.getName());
+        then(helper).should().setName(desc, C.class.getName());
     }
 
     private static class C {

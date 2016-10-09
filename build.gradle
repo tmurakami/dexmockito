@@ -3,7 +3,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.0'
+        classpath 'com.android.tools.build:gradle:2.2.1'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.13.0'
     }
@@ -23,7 +23,7 @@ def repackagedJarName = 'repackaged.jar'
 
 android {
     compileSdkVersion 24
-    buildToolsVersion '24.0.2'
+    buildToolsVersion '24.0.3'
     defaultConfig {
         minSdkVersion 5
         testInstrumentationRunnerArguments.package = packageName
