@@ -81,7 +81,7 @@ public class DexClassLoadingStrategyTest {
             assertFalse(f.exists());
             assertEquals(cacheDir, f.getParentFile());
         }
-        assertTrue(files[0].getName().endsWith(".jar"));
+        assertTrue(files[0].getName().endsWith(".zip"));
         assertTrue(files[1].getName().endsWith(".dex"));
     }
 

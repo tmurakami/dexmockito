@@ -8,6 +8,6 @@ interface DexMockitoMockMakerHelper {
 
     Class generateMockClass(MockCreationSettings<?> settings);
 
-    void setName(ObjectStreamClass desc, String name);
+    Class resolveMockClass(ObjectStreamClass desc, MockCreationSettings<?> settings);
 
 }

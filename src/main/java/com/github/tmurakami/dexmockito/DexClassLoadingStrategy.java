@@ -8,7 +8,6 @@ import com.github.tmurakami.dexmockito.repackaged.com.android.dx.dex.file.DexFil
 
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
-import net.bytebuddy.utility.RandomString;
 
 import org.mockito.internal.util.io.IOUtil;
 
@@ -17,9 +16,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.jar.JarEntry;
-import java.util.jar.JarOutputStream;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 final class DexClassLoadingStrategy implements ClassLoadingStrategy {
 
@@ -27,7 +26,6 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
     private final DexFileLoader fileLoader;
     private final DexOptions dexOptions = new DexOptions();
     private final CfOptions cfOptions = new CfOptions();
-    private final RandomString randomString = new RandomString();
 
     DexClassLoadingStrategy(File cacheDir, DexFileLoader fileLoader) {
         this.cacheDir = cacheDir;
@@ -43,20 +41,21 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
             String path = e.getKey().getName().replace('.', '/') + ".class";
             dxDexFile.add(CfTranslator.translate(path, e.getValue(), cfOptions, dexOptions));
         }
-        String fileName = randomString.nextString();
-        File jar = new File(cacheDir, fileName + ".jar");
-        File dex = new File(cacheDir, fileName + ".dex");
+        File zip = null;
+        File dex = null;
         dalvik.system.DexFile dexFile = null;
         try {
-            JarOutputStream out = new JarOutputStream(new FileOutputStream(jar));
+            zip = File.createTempFile("classes", ".zip", cacheDir);
+            ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zip));
             try {
-                out.putNextEntry(new JarEntry("classes.dex"));
+                out.putNextEntry(new ZipEntry("classes.dex"));
                 dxDexFile.writeTo(out, null, false);
                 out.closeEntry();
             } finally {
                 IOUtil.closeQuietly(out);
             }
-            dexFile = fileLoader.load(jar.getCanonicalPath(), dex.getCanonicalPath());
+            dex = new File(cacheDir, zip.getName().replace(".zip", ".dex"));
+            dexFile = fileLoader.load(zip.getCanonicalPath(), dex.getCanonicalPath());
             Map<TypeDescription, Class<?>> classMap = new HashMap<>();
             for (TypeDescription td : types.keySet()) {
                 String name = td.getName();
@@ -68,7 +67,7 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
             throw new RuntimeException(e);
         } finally {
             closeQuietly(dexFile);
-            deleteFiles(jar, dex);
+            deleteFiles(zip, dex);
         }
     }
 

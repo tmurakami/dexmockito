@@ -32,7 +32,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isHashCode;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static org.mockito.mock.SerializableMode.ACROSS_CLASSLOADERS;
 
-final class MockClassGeneratorImpl implements MockClassGenerator {
+final class ByteBuddyMockClassGenerator implements MockClassGenerator {
 
     private final ClassLoaderResolver resolver;
     private final ClassLoadingStrategy strategy;
@@ -41,7 +41,7 @@ final class MockClassGeneratorImpl implements MockClassGenerator {
             .with(TypeValidation.DISABLED)
             .with(new SuffixingRandom("MockitoMock", ForUnnamedType.INSTANCE, "codegen"));
 
-    MockClassGeneratorImpl(ClassLoaderResolver resolver, ClassLoadingStrategy strategy) {
+    ByteBuddyMockClassGenerator(ClassLoaderResolver resolver, ClassLoadingStrategy strategy) {
         this.resolver = resolver;
         this.strategy = strategy;
     }

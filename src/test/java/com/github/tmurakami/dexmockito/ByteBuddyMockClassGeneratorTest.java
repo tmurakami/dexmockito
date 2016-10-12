@@ -25,7 +25,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.mock.SerializableMode.ACROSS_CLASSLOADERS;
 
 @RunWith(Parameterized.class)
-public class MockClassGeneratorImplTest {
+public class ByteBuddyMockClassGeneratorTest {
 
     @Mock
     MockCreationSettings<C> settings;
@@ -33,16 +33,16 @@ public class MockClassGeneratorImplTest {
     ClassLoaderResolver resolver;
 
     private final SerializableMode serializableMode;
-    private MockClassGeneratorImpl target;
+    private ByteBuddyMockClassGenerator target;
 
-    public MockClassGeneratorImplTest(SerializableMode serializableMode) {
+    public ByteBuddyMockClassGeneratorTest(SerializableMode serializableMode) {
         this.serializableMode = serializableMode;
     }
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        target = new MockClassGeneratorImpl(resolver, ClassLoadingStrategy.Default.INJECTION);
+        target = new ByteBuddyMockClassGenerator(resolver, ClassLoadingStrategy.Default.INJECTION);
     }
 
     @Parameterized.Parameters(name = "serializable={0}")

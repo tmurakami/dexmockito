@@ -49,28 +49,20 @@ final class MockClassCache implements MockClassGenerator {
     }
 
     private static <T> T get(Future<T> future) {
-        boolean interrupted = false;
         try {
-            while (true) {
-                try {
-                    return future.get();
-                } catch (InterruptedException e) {
-                    interrupted = true;
-                } catch (ExecutionException e) {
-                    Throwable cause = e.getCause();
-                    if (cause instanceof Error) {
-                        throw (Error) cause;
-                    } else if (cause instanceof RuntimeException) {
-                        throw (RuntimeException) cause;
-                    } else {
-                        throw new RuntimeException(cause);
-                    }
-                }
+            return future.get();
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof Error) {
+                throw (Error) cause;
+            } else if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            } else {
+                throw new RuntimeException(cause);
             }
-        } finally {
-            if (interrupted) {
-                Thread.currentThread().interrupt();
-            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
         }
     }
 

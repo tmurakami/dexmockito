@@ -2,6 +2,7 @@ package com.github.tmurakami.dexmockito;
 
 import android.os.Build;
 
+import org.mockito.internal.util.reflection.FieldSetter;
 import org.mockito.mock.MockCreationSettings;
 
 import java.io.ObjectStreamClass;
@@ -16,7 +17,7 @@ final class DexMockitoMockMakerHelperImpl implements DexMockitoMockMakerHelper {
         try {
             NAME = ObjectStreamClass.class.getDeclaredField(name);
         } catch (NoSuchFieldException e) {
-            throw new RuntimeException(e);
+            throw new Error(e);
         }
     }
 
@@ -32,13 +33,13 @@ final class DexMockitoMockMakerHelperImpl implements DexMockitoMockMakerHelper {
     }
 
     @Override
-    public void setName(ObjectStreamClass desc, String name) {
-        NAME.setAccessible(true);
-        try {
-            NAME.set(desc, name);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
+    public Class resolveMockClass(ObjectStreamClass desc, MockCreationSettings<?> settings) {
+        Class<?> c = generateMockClass(settings);
+        String name = c.getName();
+        if (!name.equals(desc.getName())) {
+            FieldSetter.setField(desc, NAME, name);
         }
+        return c;
     }
 
 }

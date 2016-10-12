@@ -1,5 +1,7 @@
 package com.github.tmurakami.dexmockito;
 
+import android.content.Context;
+
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.jar.asm.ClassWriter;
 import net.bytebuddy.jar.asm.Type;
@@ -48,12 +50,11 @@ public class ClassLoaderTest extends BaseAndroidTestCase {
         });
         Map<TypeDescription, byte[]> bytecodeMap = new HashMap<>();
         bytecodeMap.put(typeDescription, generateBytecode(name));
-        File cacheDir = new File(getContext().getCacheDir(), thisClass.getSimpleName().toLowerCase(Locale.US));
         ClassLoader loader = new ClassLoader() {
         };
+        File cacheDir = getContext().getDir(thisClass.getSimpleName().toLowerCase(Locale.US), Context.MODE_PRIVATE);
         Map<TypeDescription, Class<?>> classMap;
         try {
-            assertTrue(cacheDir.mkdir());
             classMap = new DexClassLoadingStrategy(cacheDir, fileLoader).load(loader, bytecodeMap);
         } finally {
             assertTrue(FileUtils.forceDelete(cacheDir));
