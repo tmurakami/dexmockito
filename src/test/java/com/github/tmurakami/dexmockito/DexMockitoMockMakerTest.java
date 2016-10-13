@@ -8,6 +8,7 @@ import org.mockito.invocation.MockHandler;
 import org.mockito.mock.MockCreationSettings;
 import org.mockito.plugins.MockMaker;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.objenesis.ObjenesisStd;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.BDDMockito.given;
@@ -28,7 +29,7 @@ public class DexMockitoMockMakerTest {
     MockMaker.TypeMockability typeMockability;
 
     @InjectMocks
-    DexMockitoMockMaker target;
+    DexMockitoMockMaker target = new ObjenesisStd(false).newInstance(DexMockitoMockMaker.class);
 
     @Test
     public void testCreateMock() {

@@ -8,7 +8,7 @@ import org.mockito.mock.MockCreationSettings;
 import java.io.ObjectStreamClass;
 import java.lang.reflect.Field;
 
-final class DexMockitoMockMakerHelperImpl implements DexMockitoMockMakerHelper {
+final class DexMockitoMockMakerHelperImpl extends DexMockitoMockMakerHelper {
 
     private static final Field NAME;
 

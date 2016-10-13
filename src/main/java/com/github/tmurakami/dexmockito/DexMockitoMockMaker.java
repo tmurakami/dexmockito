@@ -10,17 +10,8 @@ import org.objenesis.ObjenesisStd;
 
 public final class DexMockitoMockMaker implements MockMaker {
 
-    private final MockMaker delegate;
-    private final DexMockitoMockMakerHelper helper;
-
-    public DexMockitoMockMaker() {
-        this(new ObjenesisStd(false).newInstance(SubclassByteBuddyMockMaker.class), DexMockitoMockMakerHelperFactory.newDexMockitoMockMakerHelper());
-    }
-
-    private DexMockitoMockMaker(MockMaker delegate, DexMockitoMockMakerHelper helper) {
-        this.delegate = delegate;
-        this.helper = helper;
-    }
+    private MockMaker delegate = new ObjenesisStd(false).newInstance(SubclassByteBuddyMockMaker.class);
+    private DexMockitoMockMakerHelper helper = DexMockitoMockMakerHelper.create();
 
     @Override
     public <T> T createMock(MockCreationSettings<T> settings, MockHandler handler) {

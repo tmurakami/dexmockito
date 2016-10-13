@@ -50,11 +50,10 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
             try {
                 out.putNextEntry(new ZipEntry("classes.dex"));
                 dxDexFile.writeTo(out, null, false);
-                out.closeEntry();
             } finally {
                 IOUtil.closeQuietly(out);
             }
-            dex = new File(cacheDir, zip.getName().replace(".zip", ".dex"));
+            dex = new File(cacheDir, zip.getName() + ".dex");
             dexFile = fileLoader.load(zip.getCanonicalPath(), dex.getCanonicalPath());
             Map<TypeDescription, Class<?>> classMap = new HashMap<>();
             for (TypeDescription td : types.keySet()) {
