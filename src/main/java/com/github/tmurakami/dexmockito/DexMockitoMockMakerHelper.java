@@ -24,13 +24,11 @@ abstract class DexMockitoMockMakerHelper {
     abstract Class resolveMockClass(ObjectStreamClass desc, MockCreationSettings<?> settings);
 
     static DexMockitoMockMakerHelper create() {
-        return new DexMockitoMockMakerHelperImpl(newMockClassGeneratorCache(newMockClassGenerator()));
-    }
-
-    private static MockClassGenerator newMockClassGenerator() {
         ClassLoaderResolver classLoaderResolver = newClassLoaderResolver();
         ClassLoadingStrategy classLoadingStrategy = new DexClassLoadingStrategy(getCacheDir(), newDexFileLoader());
-        return new ByteBuddyMockClassGenerator(classLoaderResolver, classLoadingStrategy);
+        ByteBuddyMockClassGenerator generator = new ByteBuddyMockClassGenerator(classLoaderResolver, classLoadingStrategy);
+        ConcurrentMap<Reference, MockClassGenerator> cache = new ConcurrentHashMap<>();
+        return new DexMockitoMockMakerHelperImpl(new MockClassGeneratorCache(cache, new ReferenceQueue<>(), newMockClassGeneratorFactory(generator)));
     }
 
     private static ClassLoaderResolver newClassLoaderResolver() {
@@ -62,11 +60,6 @@ abstract class DexMockitoMockMakerHelper {
                 return DexFile.loadDex(sourcePathName, outputPathName, 0);
             }
         };
-    }
-
-    private static MockClassGeneratorCache newMockClassGeneratorCache(MockClassGenerator generator) {
-        ConcurrentMap<Reference, MockClassGenerator> cache = new ConcurrentHashMap<>();
-        return new MockClassGeneratorCache(cache, new ReferenceQueue<>(), newMockClassGeneratorFactory(generator));
     }
 
     private static MockClassGeneratorFactory newMockClassGeneratorFactory(final MockClassGenerator generator) {

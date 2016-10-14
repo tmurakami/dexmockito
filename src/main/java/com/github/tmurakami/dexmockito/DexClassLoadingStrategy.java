@@ -81,7 +81,7 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
 
     private static void deleteFiles(File... files) {
         for (File f : files) {
-            if (f.exists() && !f.delete()) {
+            if (f != null && f.exists() && !f.delete()) {
                 Logger.getLogger("com.github.tmurakami.dexmockito").warning("Cannot delete " + f);
             }
         }
