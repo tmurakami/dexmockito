@@ -49,7 +49,7 @@ dependencies {
     jarjar 'com.googlecode.jarjar:jarjar:1.3'
     repackage 'com.google.android.tools:dx:1.7'
     compile files("$buildDir/libs/$repackagedJarName") { builtBy 'jarjar' }
-    compile('org.mockito:mockito-core:2.1.0') { exclude module: 'byte-buddy-agent' }
+    compile('org.mockito:mockito-core:2.2.1') { exclude module: 'byte-buddy-agent' }
     testCompile 'junit:junit:4.12'
 }
 
