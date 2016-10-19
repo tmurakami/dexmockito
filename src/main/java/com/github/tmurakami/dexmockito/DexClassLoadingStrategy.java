@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -45,11 +46,18 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy {
         File dex = null;
         dalvik.system.DexFile dexFile = null;
         try {
+            byte[] bytes = dxDexFile.toDex(null, false);
             zip = File.createTempFile("classes", ".zip", cacheDir);
             ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zip));
             try {
-                out.putNextEntry(new ZipEntry("classes.dex"));
-                dxDexFile.writeTo(out, null, false);
+                out.setMethod(ZipOutputStream.STORED);
+                ZipEntry e = new ZipEntry("classes.dex");
+                e.setSize(bytes.length);
+                CRC32 crc32 = new CRC32();
+                crc32.update(bytes);
+                e.setCrc(crc32.getValue());
+                out.putNextEntry(e);
+                out.write(bytes);
             } finally {
                 IOUtil.closeQuietly(out);
             }
