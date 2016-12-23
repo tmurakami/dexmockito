@@ -5,8 +5,8 @@ import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.mock.MockCreationSettings;
-import org.mockito.runners.MockitoJUnitRunner;
 
 import java.lang.ref.Reference;
 import java.util.ArrayList;

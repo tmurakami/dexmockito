@@ -56,8 +56,8 @@ public final class AcrossClassLoadersMockProxy implements Externalizable {
                 .setTypeToMock((Class<?>) in.readObject())
                 .setExtraInterfaces((Set<Class<?>>) in.readObject())
                 .setSerializableMode(SerializableMode.ACROSS_CLASSLOADERS);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(8192);
-        byte[] buffer = new byte[8192];
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buffer = new byte[16384];
         for (int l; (l = in.read(buffer)) != -1; ) {
             baos.write(buffer, 0, l);
         }

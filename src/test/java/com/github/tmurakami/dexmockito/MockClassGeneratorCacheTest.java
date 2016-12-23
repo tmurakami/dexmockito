@@ -8,8 +8,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.internal.util.io.IOUtil;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.mock.MockCreationSettings;
-import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -7,9 +7,9 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.mock.MockCreationSettings;
 import org.mockito.mock.SerializableMode;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
 import java.io.ByteArrayInputStream;
@@ -46,7 +46,7 @@ public class AcrossClassLoadersMockProxyTest {
     @Test
     public void testReadExternal() throws IOException, ClassNotFoundException {
         given(in.readObject()).willReturn(C.class.getName(), C.class, Collections.singleton(I.class));
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(8192);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
         oos.writeObject(new C());
         oos.close();
@@ -60,18 +60,18 @@ public class AcrossClassLoadersMockProxyTest {
         given(helper.resolveMockClass(
                 argThat(new ArgumentMatcher<ObjectStreamClass>() {
                     @Override
-                    public boolean matches(ObjectStreamClass desc) {
-                        return desc.getName().equals(C.class.getName());
+                    public boolean matches(ObjectStreamClass argument) {
+                        return argument.getName().equals(C.class.getName());
                     }
                 }),
                 argThat(new ArgumentMatcher<MockCreationSettings<?>>() {
                     @Override
-                    public boolean matches(MockCreationSettings<?> settings) {
-                        Set<Class<?>> extraInterfaces = settings.getExtraInterfaces();
-                        return settings.getTypeToMock().equals(C.class)
+                    public boolean matches(MockCreationSettings<?> argument) {
+                        Set<Class<?>> extraInterfaces = argument.getExtraInterfaces();
+                        return argument.getTypeToMock().equals(C.class)
                                 && extraInterfaces.size() == 1
                                 && extraInterfaces.contains(I.class)
-                                && settings.getSerializableMode() == SerializableMode.ACROSS_CLASSLOADERS;
+                                && argument.getSerializableMode() == SerializableMode.ACROSS_CLASSLOADERS;
                     }
                 }))).willReturn(C.class);
         AcrossClassLoadersMockProxy proxy = new AcrossClassLoadersMockProxy();

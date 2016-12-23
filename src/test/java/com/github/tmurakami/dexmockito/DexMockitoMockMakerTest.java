@@ -5,9 +5,9 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.invocation.MockHandler;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.mock.MockCreationSettings;
 import org.mockito.plugins.MockMaker;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.objenesis.ObjenesisStd;
 
 import static org.junit.Assert.assertEquals;
