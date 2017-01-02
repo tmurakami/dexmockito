@@ -24,24 +24,10 @@ abstract class DexMockitoMockMakerHelper {
     abstract Class resolveMockClass(ObjectStreamClass desc, MockCreationSettings<?> settings);
 
     static DexMockitoMockMakerHelper create() {
-        ClassLoaderResolver classLoaderResolver = newClassLoaderResolver();
-        ClassLoadingStrategy classLoadingStrategy = new DexClassLoadingStrategy(getCacheDir(), newDexFileLoader());
-        ByteBuddyMockClassGenerator generator = new ByteBuddyMockClassGenerator(classLoaderResolver, classLoadingStrategy);
+        ClassLoadingStrategy<ClassLoader> classLoadingStrategy = new DexClassLoadingStrategy(getCacheDir(), newDexFileLoader());
+        ByteBuddyMockClassGenerator generator = new ByteBuddyMockClassGenerator(classLoadingStrategy);
         ConcurrentMap<Reference, MockClassGenerator> cache = new ConcurrentHashMap<>();
         return new DexMockitoMockMakerHelperImpl(new MockClassGeneratorCache(cache, new ReferenceQueue<>(), newMockClassGeneratorFactory(generator)));
-    }
-
-    private static ClassLoaderResolver newClassLoaderResolver() {
-        return new ClassLoaderResolver() {
-            @Override
-            public ClassLoader resolveClassLoader(MockCreationSettings<?> settings) {
-                ClassLoader classLoader = settings.getTypeToMock().getClassLoader();
-                if (classLoader == null || classLoader == Object.class.getClassLoader()) {
-                    classLoader = Thread.currentThread().getContextClassLoader();
-                }
-                return classLoader == null ? getClass().getClassLoader() : classLoader;
-            }
-        };
     }
 
     private static File getCacheDir() {

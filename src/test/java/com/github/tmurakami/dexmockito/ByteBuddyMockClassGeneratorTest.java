@@ -29,8 +29,6 @@ public class ByteBuddyMockClassGeneratorTest {
 
     @Mock
     MockCreationSettings<C> settings;
-    @Mock
-    ClassLoaderResolver resolver;
 
     private final SerializableMode serializableMode;
     private ByteBuddyMockClassGenerator target;
@@ -42,7 +40,7 @@ public class ByteBuddyMockClassGeneratorTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        target = new ByteBuddyMockClassGenerator(resolver, ClassLoadingStrategy.Default.INJECTION);
+        target = new ByteBuddyMockClassGenerator(ClassLoadingStrategy.Default.INJECTION);
     }
 
     @Parameterized.Parameters(name = "serializable={0}")
@@ -52,8 +50,6 @@ public class ByteBuddyMockClassGeneratorTest {
 
     @Test
     public void testGenerateMockClass() throws Exception {
-        ClassLoader classLoader = getClass().getClassLoader();
-        given(resolver.resolveClassLoader(settings)).willReturn(classLoader);
         given(settings.getTypeToMock()).willReturn(C.class);
         given(settings.getExtraInterfaces()).willReturn(Collections.<Class<?>>singleton(I.class));
         given(settings.getSerializableMode()).willReturn(serializableMode);
@@ -61,7 +57,7 @@ public class ByteBuddyMockClassGeneratorTest {
         assertTrue(C.class.isAssignableFrom(c));
         assertTrue(I.class.isAssignableFrom(c));
         assertTrue(MockAccess.class.isAssignableFrom(c));
-        assertEquals(classLoader, c.getClassLoader());
+        assertEquals(C.class.getClassLoader(), c.getClassLoader());
         assertEquals(serializableMode == ACROSS_CLASSLOADERS, hasWriteReplaceMethod(c));
         Annotation[] annotations = c.getDeclaredAnnotations();
         assertEquals(1, annotations.length);

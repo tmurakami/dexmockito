@@ -21,7 +21,7 @@ import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-final class DexClassLoadingStrategy implements ClassLoadingStrategy {
+final class DexClassLoadingStrategy implements ClassLoadingStrategy<ClassLoader> {
 
     private final File cacheDir;
     private final DexFileLoader fileLoader;
