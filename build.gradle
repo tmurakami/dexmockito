@@ -16,17 +16,17 @@ apply plugin: 'com.github.ben-manes.versions'
 apply from: "$rootDir/gradle/version.gradle"
 
 group = 'com.github.tmurakami'
-version = ext.versionName
+version = version_name
 
-def packageName = "$group.$name" as String
-def repackagedJarName = 'repackaged.jar'
+def package_name = "$group.$name" as String
+def repackaged_jar_name = 'repackaged.jar'
 
 android {
     compileSdkVersion 25
     buildToolsVersion '25.0.2'
     defaultConfig {
         minSdkVersion 5
-        testInstrumentationRunnerArguments.package = packageName
+        testInstrumentationRunnerArguments.package = package_name
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
@@ -48,14 +48,14 @@ configurations {
 dependencies {
     jarjar 'com.googlecode.jarjar:jarjar:1.3'
     repackage 'com.google.android.tools:dx:1.7'
-    compile files("$buildDir/libs/$repackagedJarName") { builtBy 'jarjar' }
+    compile files("$buildDir/libs/$repackaged_jar_name") { builtBy 'jarjar' }
     compile('org.mockito:mockito-core:2.5.4') { exclude module: 'byte-buddy-agent' }
     provided 'com.android.support.test:rules:0.5'
     testCompile 'junit:junit:4.12'
 }
 
 task jarjar(type: Jar) {
-    archiveName = repackagedJarName
+    archiveName = repackaged_jar_name
     doLast {
         ant {
             taskdef name: 'jarjar',
@@ -64,7 +64,7 @@ task jarjar(type: Jar) {
             jarjar(jarfile: archivePath) {
                 configurations.repackage.each { zipfileset src: it }
                 keep pattern: 'com.android.dx.dex.cf.CfTranslator'
-                rule pattern: 'com.android.dx.**', result: "${packageName}.repackaged.com.android.dx.@1"
+                rule pattern: 'com.android.dx.**', result: "${package_name}.repackaged.com.android.dx.@1"
             }
         }
     }
