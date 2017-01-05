@@ -50,6 +50,7 @@ dependencies {
     repackage 'com.google.android.tools:dx:1.7'
     compile files("$buildDir/libs/$repackagedJarName") { builtBy 'jarjar' }
     compile('org.mockito:mockito-core:2.5.3') { exclude module: 'byte-buddy-agent' }
+    provided 'com.android.support.test:rules:0.5'
     testCompile 'junit:junit:4.12'
 }
 

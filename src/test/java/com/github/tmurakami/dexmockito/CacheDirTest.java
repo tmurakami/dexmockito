@@ -57,7 +57,7 @@ public class CacheDirTest {
         given(resources.nextElement()).willReturn(url).willThrow(new NoSuchElementException());
         folder.newFolder("data", "data", "a.b.c");
         File root = folder.getRoot();
-        assertEquals(new File(root, "data/data/a.b.c/cache/dexmockito"), CacheDir.get(root, loader));
+        assertEquals(new File(root, "data/data/a.b.c/cache"), CacheDir.get(root, loader));
     }
 
 }

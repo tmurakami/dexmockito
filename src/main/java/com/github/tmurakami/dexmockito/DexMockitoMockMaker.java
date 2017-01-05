@@ -1,25 +1,17 @@
 package com.github.tmurakami.dexmockito;
 
-import org.mockito.internal.configuration.plugins.Plugins;
 import org.mockito.internal.creation.bytebuddy.SubclassByteBuddyMockMaker;
-import org.mockito.internal.creation.instance.Instantiator;
 import org.mockito.invocation.MockHandler;
 import org.mockito.mock.MockCreationSettings;
 import org.mockito.plugins.MockMaker;
-import org.objenesis.ObjenesisStd;
 
 public final class DexMockitoMockMaker implements MockMaker {
 
-    private MockMaker delegate = new ObjenesisStd(false).newInstance(SubclassByteBuddyMockMaker.class);
-    private DexMockitoMockMakerHelper helper = DexMockitoMockMakerHelper.create();
+    private MockMaker delegate = new SubclassByteBuddyMockMaker(new DexSubclassLoader());
 
     @Override
     public <T> T createMock(MockCreationSettings<T> settings, MockHandler handler) {
-        Class<?> c = helper.generateMockClass(settings);
-        Instantiator instantiator = Plugins.getInstantiatorProvider().getInstantiator(settings);
-        T mock = settings.getTypeToMock().cast(instantiator.newInstance(c));
-        resetMock(mock, handler, settings);
-        return mock;
+        return delegate.createMock(settings, handler);
     }
 
     @Override
@@ -35,10 +27,6 @@ public final class DexMockitoMockMaker implements MockMaker {
     @Override
     public TypeMockability isTypeMockable(Class<?> type) {
         return delegate.isTypeMockable(type);
-    }
-
-    DexMockitoMockMakerHelper getHelper() {
-        return helper;
     }
 
 }

@@ -23,13 +23,13 @@ import java.util.zip.ZipOutputStream;
 
 final class DexClassLoadingStrategy implements ClassLoadingStrategy<ClassLoader> {
 
-    private final File cacheDir;
+    private final File dexCacheDir;
     private final DexFileLoader fileLoader;
     private final DexOptions dexOptions = new DexOptions();
     private final CfOptions cfOptions = new CfOptions();
 
-    DexClassLoadingStrategy(File cacheDir, DexFileLoader fileLoader) {
-        this.cacheDir = cacheDir;
+    DexClassLoadingStrategy(File dexCacheDir, DexFileLoader fileLoader) {
+        this.dexCacheDir = dexCacheDir;
         this.fileLoader = fileLoader;
         this.dexOptions.targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
     }
@@ -37,17 +37,17 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy<ClassLoader>
     @Override
     public Map<TypeDescription, Class<?>> load(ClassLoader classLoader,
                                                Map<TypeDescription, byte[]> types) {
-        DexFile dxDexFile = new DexFile(dexOptions);
+        DexFile df = new DexFile(dexOptions);
         for (Map.Entry<TypeDescription, byte[]> e : types.entrySet()) {
             String path = e.getKey().getName().replace('.', '/') + ".class";
-            dxDexFile.add(CfTranslator.translate(path, e.getValue(), cfOptions, dexOptions));
+            df.add(CfTranslator.translate(path, e.getValue(), cfOptions, dexOptions));
         }
         File zip = null;
         File dex = null;
         dalvik.system.DexFile dexFile = null;
         try {
-            byte[] bytes = dxDexFile.toDex(null, false);
-            zip = File.createTempFile("classes", ".zip", cacheDir);
+            byte[] bytes = df.toDex(null, false);
+            zip = File.createTempFile("classes", ".zip", dexCacheDir);
             ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zip));
             try {
                 out.setMethod(ZipOutputStream.STORED);
@@ -61,7 +61,7 @@ final class DexClassLoadingStrategy implements ClassLoadingStrategy<ClassLoader>
             } finally {
                 IOUtil.closeQuietly(out);
             }
-            dex = new File(cacheDir, zip.getName() + ".dex");
+            dex = new File(dexCacheDir, zip.getName() + ".dex");
             dexFile = fileLoader.load(zip.getCanonicalPath(), dex.getCanonicalPath());
             Map<TypeDescription, Class<?>> classMap = new HashMap<>();
             for (TypeDescription td : types.keySet()) {

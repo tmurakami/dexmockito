@@ -29,15 +29,15 @@ final class CacheDir {
                 if (!data.exists()) {
                     continue;
                 }
-                File dir = new File(data, "cache/dexmockito");
-                if (dir.isDirectory() && dir.canRead() && dir.canWrite() || dir.mkdirs()) {
+                File dir = new File(data, "cache");
+                if (dir.isDirectory() && dir.canRead() && dir.canWrite() || dir.mkdir()) {
                     return dir.getCanonicalFile();
                 }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        throw new Error("Cannot access DexMockito cache directory");
+        throw new Error("Cannot access application cache directory");
     }
 
 }

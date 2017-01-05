@@ -8,9 +8,8 @@ import org.mockito.invocation.MockHandler;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.mock.MockCreationSettings;
 import org.mockito.plugins.MockMaker;
-import org.objenesis.ObjenesisStd;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -20,8 +19,6 @@ public class DexMockitoMockMakerTest {
     @Mock
     MockMaker delegate;
     @Mock
-    DexMockitoMockMakerHelper helper;
-    @Mock
     MockCreationSettings<C> settings;
     @Mock
     MockHandler handler;
@@ -29,22 +26,20 @@ public class DexMockitoMockMakerTest {
     MockMaker.TypeMockability typeMockability;
 
     @InjectMocks
-    DexMockitoMockMaker target = new ObjenesisStd(false).newInstance(DexMockitoMockMaker.class);
+    DexMockitoMockMaker target;
 
     @Test
     public void testCreateMock() {
-        Class<C> c = C.class;
-        given(helper.generateMockClass(settings)).willReturn(c);
-        given(settings.getTypeToMock()).willReturn(c);
-        C mock = target.createMock(settings, handler);
-        then(delegate).should().resetMock(mock, handler, settings);
+        C c = new C();
+        given(delegate.createMock(settings, handler)).willReturn(c);
+        assertSame(c, target.createMock(settings, handler));
     }
 
     @Test
     public void testGetHandler() {
         Object o = new Object();
         given(delegate.getHandler(o)).willReturn(handler);
-        assertEquals(handler, target.getHandler(o));
+        assertSame(handler, target.getHandler(o));
     }
 
     @Test
@@ -57,7 +52,7 @@ public class DexMockitoMockMakerTest {
     @Test
     public void testIsTypeMockable() {
         given(delegate.isTypeMockable(C.class)).willReturn(typeMockability);
-        assertEquals(typeMockability, target.isTypeMockable(C.class));
+        assertSame(typeMockability, target.isTypeMockable(C.class));
     }
 
     private static class C {

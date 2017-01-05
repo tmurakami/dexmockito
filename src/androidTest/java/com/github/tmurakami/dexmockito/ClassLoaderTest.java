@@ -62,7 +62,7 @@ public class ClassLoaderTest extends BaseAndroidTestCase {
         Class<?> c = classMap.get(typeDescription);
         assertNotNull(c);
         assertEquals(name, c.getName());
-        assertEquals(loader, c.getClassLoader());
+        assertSame(loader, c.getClassLoader());
     }
 
     private static byte[] generateBytecode(String name) {

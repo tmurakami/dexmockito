@@ -14,7 +14,7 @@ public class MethodAnnotationTest extends TestCase {
         Class<?> c = mock(C.class).getClass();
         Annotation[] annotations = c.getDeclaredMethod("doIt").getDeclaredAnnotations();
         assertEquals(1, annotations.length);
-        assertEquals(A2.class, annotations[0].annotationType());
+        assertSame(A2.class, annotations[0].annotationType());
     }
 
     @Retention(RetentionPolicy.RUNTIME)
