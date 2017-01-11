@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.BDDMockito.given;
 
 @RunWith(Parameterized.class)
-public class CacheDirTest {
+public class AppCacheDirTest {
 
     @Rule
     public final TemporaryFolder folder = new TemporaryFolder();
@@ -32,7 +32,7 @@ public class CacheDirTest {
 
     private final String apkPath;
 
-    public CacheDirTest(String apkPath) {
+    public AppCacheDirTest(String apkPath) {
         this.apkPath = apkPath;
     }
 

@@ -19,24 +19,24 @@ final class DexSubclassLoader implements SubclassLoader {
 
     @Override
     public ClassLoadingStrategy<ClassLoader> getStrategy(Class<?> mockedType) {
-        File dexCacheDir = getDexCacheDir();
-        if (!dexCacheDir.exists() && !dexCacheDir.mkdirs()) {
+        File cacheDir = getCacheDir();
+        if (!cacheDir.exists() && !cacheDir.mkdirs()) {
             throw new Error("Cannot access DexMockito cache directory");
         }
-        return new AndroidClassLoadingStrategy.Injecting(dexCacheDir);
+        return new AndroidClassLoadingStrategy.Injecting(cacheDir);
     }
 
-    private static File getDexCacheDir() {
+    private static File getCacheDir() {
         for (String key : CACHE_PROPERTY_KEYS) {
             String property = System.getProperty(key);
             if (!TextUtils.isEmpty(property)) {
                 return new File(property);
             }
         }
-        return new File(getCacheDir(), "dexmockito");
+        return new File(getAppCacheDir(), "dexmockito");
     }
 
-    private static File getCacheDir() {
+    private static File getAppCacheDir() {
         try {
             return InstrumentationRegistry.getTargetContext().getCacheDir();
         } catch (NoClassDefFoundError e) {
