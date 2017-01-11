@@ -16,3 +16,6 @@ dependencies {
     androidTestCompile 'com.github.tmurakami:dexmockito:x.y.z'
 }
 ```
+
+## Caution
+Note that this library is going to be obsolete when the official [mockito-android](https://github.com/mockito/mockito/tree/release/2.x/subprojects/android) is published.
