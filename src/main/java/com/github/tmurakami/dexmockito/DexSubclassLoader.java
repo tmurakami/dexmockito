@@ -2,14 +2,12 @@ package com.github.tmurakami.dexmockito;
 
 import android.support.test.InstrumentationRegistry;
 
+import net.bytebuddy.android.AndroidClassLoadingStrategy;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 
 import org.mockito.internal.creation.bytebuddy.SubclassLoader;
 
 import java.io.File;
-import java.io.IOException;
-
-import dalvik.system.DexFile;
 
 final class DexSubclassLoader implements SubclassLoader {
 
@@ -19,7 +17,7 @@ final class DexSubclassLoader implements SubclassLoader {
         if (!dexCacheDir.exists() && !dexCacheDir.mkdirs()) {
             throw new Error("Cannot access DexMockito cache directory");
         }
-        return new DexClassLoadingStrategy(dexCacheDir, newDexFileLoader());
+        return new AndroidClassLoadingStrategy.Injecting(dexCacheDir);
     }
 
     private static File getDexCacheDir() {
@@ -33,15 +31,6 @@ final class DexSubclassLoader implements SubclassLoader {
         } catch (NoClassDefFoundError e) {
             return CacheDir.get(new File("/"), DexSubclassLoader.class.getClassLoader());
         }
-    }
-
-    private static DexFileLoader newDexFileLoader() {
-        return new DexFileLoader() {
-            @Override
-            public DexFile load(String sourcePathName, String outputPathName) throws IOException {
-                return DexFile.loadDex(sourcePathName, outputPathName, 0);
-            }
-        };
     }
 
 }
