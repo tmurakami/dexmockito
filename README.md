@@ -1,7 +1,15 @@
 # DEPRECATED
 
-This library is deprecated.
-Please use the official [mockito-android](https://github.com/mockito/mockito/tree/release/2.x/subprojects/android).
+This library is deprecated. Please use the official mockito-android.
+```groovy
+repositories {
+    jcenter()
+}
+
+dependencies {
+    androidTestCompile 'org.mockito:mockito-android:[2.6.1,)'
+}
+```
 
 # DexMockito
 
